@@ -1,4 +1,5 @@
 ---
+import Illustration from '../components/Illustration.astro';
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import SocialIcon from '../components/SocialIcon.astro';
@@ -48,8 +49,7 @@ const answers: Record<string, string> = {
       <div class="fig-ring" id="fig-ring"></div>
       <div class="fig-glow" id="fig-glow"></div>
       <div class="fig-body" id="fig-body">
-        <img class="fig-img body" id="fig-torso" src={photo} alt="" width="866" height="1416" decoding="async" />
-        <img class="fig-img head" id="fig-head" src={photo} alt="" width="866" height="1416" decoding="async" />
+        <Illustration />
       </div>
     </div>
   </div>

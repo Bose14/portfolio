@@ -1,0 +1,80 @@
+---
+// Original flat-vector character of Bose. Layers: torso group (body + arms) and head group, driven by companion.ts.
+---
+<svg class="fig-svg" viewBox="0 0 400 620" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="fadeG" x1="0" y1="0" x2="0" y2="1"><stop offset=".78" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
+    <mask id="fadeM" maskUnits="userSpaceOnUse" x="-80" y="-80" width="560" height="760"><rect x="-80" y="-80" width="560" height="760" fill="url(#fadeG)"/></mask>
+    <linearGradient id="jk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a3a47"/><stop offset=".55" stop-color="#262630"/><stop offset="1" stop-color="#383844"/></linearGradient>
+    <linearGradient id="sk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b5744a"/><stop offset="1" stop-color="#975a37"/></linearGradient>
+  </defs>
+
+  <g id="fig-torso" mask="url(#fadeM)">
+    <!-- hanging arm, hand in pocket -->
+    <path d="M62 298 Q38 332 42 424 L50 560 Q72 578 96 560 L106 424 Q112 332 100 292Z" fill="url(#jk)"/>
+    <!-- waving arm -->
+    <g class="arm-wave">
+      <path d="M298 292 Q292 336 296 430 L302 540 Q326 554 350 540 L356 430 Q362 336 342 292Z" fill="url(#jk)"/>
+      <rect x="301" y="526" width="52" height="14" rx="5" fill="#f4f1ec"/>
+      <g class="hand">
+        <ellipse cx="327" cy="562" rx="19" ry="23" fill="url(#sk)"/>
+        <path d="M312 548 Q300 540 302 528 Q312 530 318 542Z" fill="url(#sk)"/>
+        <path d="M316 580 q4 10 11 10 M327 584 q4 8 11 6" stroke="#7a4529" stroke-width="2" fill="none" stroke-linecap="round" opacity=".6"/>
+      </g>
+    </g>
+    <!-- jacket -->
+    <path d="M50 640 L54 342 Q56 292 118 276 L176 262 L200 300 L224 262 L282 276 Q344 292 346 342 L350 640Z" fill="url(#jk)"/>
+    <path d="M346 342 Q344 292 282 276" stroke="#ee4b62" stroke-width="2.5" fill="none" opacity=".55"/>
+    <!-- neck -->
+    <path d="M174 214 L226 214 L228 270 Q200 292 172 270Z" fill="#8f5636"/>
+    <!-- shirt + collar -->
+    <path d="M176 262 L224 262 L222 334 L200 480 L178 334Z" fill="#f4f1ec"/>
+    <path d="M170 256 L200 298 L230 256 L222 246 L200 268 L178 246Z" fill="#fff"/>
+    <!-- lapels -->
+    <path d="M176 262 L200 302 L180 342 L206 446 L148 404 L122 300Z" fill="#15151c" stroke="#4a4a58" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M224 262 L200 302 L220 342 L194 446 L252 404 L278 300Z" fill="#15151c" stroke="#4a4a58" stroke-width="1.5" stroke-linejoin="round"/>
+    <!-- tie -->
+    <path d="M190 296 L210 296 L206 318 L194 318Z" fill="#0b0b0e"/>
+    <path d="M194 318 L206 318 L215 424 L200 452 L185 424Z" fill="#0f0f14"/>
+    <path d="M199 322 L203 424" stroke="#2c2c36" stroke-width="2" stroke-linecap="round"/>
+    <!-- pocket square -->
+    <path d="M250 354 L274 350 L272 362 L252 364Z" fill="#ee4b62"/>
+    <!-- watch on the waving wrist -->
+    <rect x="304" y="516" width="46" height="9" rx="4" fill="#0e0e12"/>
+  </g>
+
+  <g id="fig-head">
+    <!-- hair back -->
+    <g fill="#0d0d11">
+      <circle cx="146" cy="150" r="22"/><circle cx="254" cy="150" r="22"/>
+      <circle cx="150" cy="120" r="26"/><circle cx="250" cy="120" r="26"/>
+      <circle cx="172" cy="100" r="28"/><circle cx="228" cy="100" r="28"/><circle cx="200" cy="92" r="28"/>
+    </g>
+    <!-- ears -->
+    <ellipse cx="139" cy="180" rx="11" ry="17" fill="#a06440"/><ellipse cx="261" cy="180" rx="11" ry="17" fill="#a06440"/>
+    <!-- face -->
+    <path d="M140 160 C140 112 168 98 200 98 C232 98 260 112 260 160 C260 206 238 242 200 246 C162 242 140 206 140 160Z" fill="url(#sk)"/>
+    <!-- stubble -->
+    <path d="M143 184 C148 226 170 244 200 247 C230 244 252 226 257 184 C244 204 228 212 200 212 C172 212 156 204 143 184Z" fill="#24150e" opacity=".5"/>
+    <!-- fringe curls -->
+    <g fill="#0d0d11">
+      <circle cx="158" cy="126" r="19"/><circle cx="180" cy="120" r="18"/><circle cx="204" cy="118" r="18"/><circle cx="226" cy="122" r="18"/><circle cx="244" cy="130" r="16"/>
+    </g>
+    <g stroke="#2d2d38" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".8">
+      <path d="M150 110 q10 -10 22 -4"/><path d="M190 100 q12 -8 24 -2"/><path d="M226 106 q10 -6 20 2"/><path d="M168 128 q8 -6 16 0"/>
+    </g>
+    <!-- brows -->
+    <path d="M160 150 Q176 142 192 148" stroke="#0d0d11" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+    <path d="M208 148 Q224 142 240 150" stroke="#0d0d11" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+    <!-- eyes -->
+    <g class="eyes">
+      <ellipse cx="177" cy="167" rx="10" ry="6.5" fill="#fff"/><circle cx="178" cy="167" r="4.6" fill="#1b100a"/><circle cx="179.6" cy="165.4" r="1.4" fill="#fff"/>
+      <ellipse cx="223" cy="167" rx="10" ry="6.5" fill="#fff"/><circle cx="224" cy="167" r="4.6" fill="#1b100a"/><circle cx="225.6" cy="165.4" r="1.4" fill="#fff"/>
+    </g>
+    <!-- nose + cheeks -->
+    <path d="M200 172 C198 186 193 192 196 197 C200 200 206 198 207 194" stroke="#74411f" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="158" cy="198" rx="13" ry="8" fill="#e0707a" opacity=".22"/><ellipse cx="242" cy="198" rx="13" ry="8" fill="#e0707a" opacity=".22"/>
+    <!-- smile -->
+    <path class="mouth" d="M176 207 Q200 236 224 207 Q200 214 176 207Z" fill="#fff" stroke="#5a2a1e" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+</svg>
