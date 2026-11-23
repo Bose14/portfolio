@@ -1,0 +1,61 @@
+---
+// Side-view illustrated character. Every limb is its own group so the rig can animate it.
+---
+
+<svg viewBox="0 0 160 262" class="char-svg" aria-hidden="true" data-char>
+  <ellipse cx="80" cy="254" rx="38" ry="6" fill="#000" opacity=".45" data-part="shadow" />
+  <g data-part="rig">
+    <!-- back arm -->
+    <g data-part="armB">
+      <path d="M82 118 L82 148" stroke="#4A58B8" stroke-width="13" stroke-linecap="round" />
+      <g data-part="foreB">
+        <path d="M82 148 L82 174" stroke="#4A58B8" stroke-width="12" stroke-linecap="round" />
+        <circle cx="82" cy="178" r="7" fill="#C98F69" />
+      </g>
+    </g>
+    <!-- back leg -->
+    <g data-part="thighB">
+      <path d="M78 170 L78 210" stroke="#1E2433" stroke-width="15" stroke-linecap="round" />
+      <g data-part="shinB">
+        <path d="M78 210 L78 245" stroke="#1E2433" stroke-width="14" stroke-linecap="round" />
+        <path d="M70 249 q2 -9 14 -8 l12 2 q6 2 4 7 q-1 3 -6 3 h-22 q-3 0 -2 -4Z" fill="#B8C0D6" />
+      </g>
+    </g>
+    <!-- backpack + torso -->
+    <rect x="44" y="104" width="24" height="52" rx="9" fill="#2A3042" />
+    <rect x="48" y="112" width="4" height="36" rx="2" fill="#8B9DFF" />
+    <path d="M62 104 Q62 98 70 98 H96 Q106 98 106 110 V164 Q106 178 90 178 H74 Q62 178 62 164Z" fill="#6F7FE8" />
+    <path d="M84 150 h18" stroke="#5362CC" stroke-width="3" stroke-linecap="round" />
+    <path d="M76 104 v18" stroke="#E9EDF5" stroke-width="2.4" stroke-linecap="round" />
+    <!-- front leg -->
+    <g data-part="thighF">
+      <path d="M78 170 L78 210" stroke="#2A3042" stroke-width="16" stroke-linecap="round" />
+      <g data-part="shinF">
+        <path d="M78 210 L78 245" stroke="#2A3042" stroke-width="15" stroke-linecap="round" />
+        <path d="M69 250 q2 -10 15 -9 l13 2 q7 2 5 8 q-1 3 -6 3 h-24 q-4 0 -3 -4Z" fill="#E9EDF5" />
+        <path d="M70 249 h30" stroke="#8B9DFF" stroke-width="2" />
+      </g>
+    </g>
+    <!-- head -->
+    <g data-part="head">
+      <ellipse cx="72" cy="104" rx="17" ry="12" fill="#5B6BD6" />
+      <rect x="82" y="94" width="13" height="16" rx="5" fill="#C98F69" />
+      <circle cx="92" cy="78" r="23" fill="#E2A982" />
+      <path d="M115 78 q7 4 1 9 q-3 1 -4 -2Z" fill="#E2A982" />
+      <circle cx="84" cy="83" r="5" fill="#D18F68" />
+      <path d="M68 78 C65 50 84 42 100 47 C113 51 117 62 114 70 C107 62 92 57 80 65 C74 69 71 77 71 88 Z" fill="#1B1F2A" />
+      <path d="M84 77 h10" stroke="#E9EDF5" stroke-width="2.2" />
+      <circle cx="102" cy="79" r="8.5" fill="#8B9DFF" fill-opacity=".18" stroke="#E9EDF5" stroke-width="2.6" />
+      <g data-part="eyes"><ellipse cx="104" cy="79" rx="2.2" ry="3.2" fill="#1B1F2A" /></g>
+      <path d="M103 92 q6 4 12 -1" fill="none" stroke="#7A4A33" stroke-width="2.4" stroke-linecap="round" />
+    </g>
+    <!-- front arm -->
+    <g data-part="armF">
+      <path d="M82 118 L82 148" stroke="#6F7FE8" stroke-width="14" stroke-linecap="round" />
+      <g data-part="foreF">
+        <path d="M82 148 L82 174" stroke="#6F7FE8" stroke-width="13" stroke-linecap="round" />
+        <circle cx="82" cy="179" r="7.5" fill="#E2A982" />
+      </g>
+    </g>
+  </g>
+</svg>

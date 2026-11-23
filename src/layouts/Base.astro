@@ -9,9 +9,10 @@ interface Props {
   title?: string;
   description?: string;
   page?: 'home' | 'about' | 'projects' | 'project' | 'notfound';
+  immersive?: boolean;
 }
 
-const { title = site.title, description = site.description, page = 'home' } = Astro.props;
+const { title = site.title, description = site.description, page = 'home', immersive = false } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(`${base}/og.png`, Astro.site);
@@ -21,6 +22,7 @@ const ogImage = new URL(`${base}/og.png`, Astro.site);
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <script is:inline>document.documentElement.classList.add('js')</script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -40,19 +42,19 @@ const ogImage = new URL(`${base}/og.png`, Astro.site);
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
   </head>
-  <body data-assistant-page={page} class="min-h-screen">
+  <body data-assistant-page={page} class:list={['min-h-screen', { immersive, loading: immersive }]}>
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-bg"
     >
       Skip to content
     </a>
-    <Header />
+    {!immersive && <Header />}
     <main id="main">
       <slot />
     </main>
-    <Footer />
-    <Assistant page={page} />
+    {!immersive && <Footer />}
+    {!immersive && <Assistant page={page} />}
     <script>
       // Scroll reveal, skipped for reduced motion.
       const els = document.querySelectorAll<HTMLElement>('.reveal');

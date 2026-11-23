@@ -153,3 +153,29 @@ export const assistant = {
 } as const;
 
 export type StopKey = keyof typeof assistant.stops;
+
+// ---- Game world ----------------------------------------------------------
+// One entry per level in the side-scrolling world. `say` is what Bo says on arrival.
+export const levels = [
+  { id: 'home', nav: 'Home', kicker: 'Prologue', title: 'Boot sequence',
+    say: "Hi, I'm Bo, Bose's guide. Scroll, swipe, or press → and I'll run you through his world. Grab the coins, squash the bugs." },
+  { id: 'about', nav: 'About', kicker: 'Level 1', title: 'Origin story',
+    say: 'Every engineer has an origin story. His started with college communities and a habit of learning by building.' },
+  { id: 'experience', nav: 'Experience', kicker: 'Level 2', title: 'Juspay',
+    say: 'Now the day job: backend and payments at Juspay, from intern to PPO to full-time Product Engineer.' },
+  { id: 'skills', nav: 'Skills', kicker: 'Side quest', title: 'Collect the stack',
+    say: 'Run through the tokens to unlock them. No fake percentage bars here, only tools Bose can actually explain.' },
+  { id: 'projects', nav: 'Projects', kicker: 'Level 3', title: 'Portals',
+    say: 'Each portal leads to a project case study. Every one is labelled honestly: product, experiment or concept.' },
+  { id: 'ventures', nav: 'Ventures', kicker: 'Level 4', title: 'Building businesses',
+    say: 'Outside work, Bose builds under Azhizen Solutions. Take a look down the street.' },
+  { id: 'creator', nav: 'Beyond Code', kicker: 'Level 5', title: 'Creator mode',
+    say: 'Bose also makes content about software careers and learning. This is his creator side.' },
+  { id: 'contact', nav: 'Contact', kicker: 'Final level', title: 'Say hello',
+    say: "You made it to the finish line! Email Bose, or try the bonus level below. Can you beat the bugs?" },
+] as const;
+
+export type LevelId = (typeof levels)[number]['id'];
+
+// Answers for the "Ask Bo" chat. Rule-based, no backend, so nothing here is guessed.
+export const chatChips = ['Who is Bose?', 'Experience', 'Skills', 'Projects', 'Education', 'Ventures', 'Contact'] as const;

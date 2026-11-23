@@ -1,182 +1,298 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import SectionHead from '../components/SectionHead.astro';
-import ProjectCard from '../components/ProjectCard.astro';
+import Character from '../components/Character.astro';
 import SocialIcon from '../components/SocialIcon.astro';
-import { ArrowRight, Download } from '@lucide/astro';
-import { site, socials, intro, identities, experience, skills, education, venture, creator } from '../config';
+import '../styles/world.css';
+import { site, socials, intro, identities, experience, skills, education, venture, creator, levels, chatChips } from '../config';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const all = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
-const featured = all.filter((p) => p.data.featured);
-const ventures = all.filter((p) => ['Software product', 'Concept', 'Hardware project', 'Independent product', 'Experiment'].includes(p.data.status));
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+
+// Hero headline split into words and characters for the staggered reveal.
+const headline = [
+  { text: "I don't just write code.", accent: false },
+  { text: 'I build things that work.', accent: true },
+];
+let ci = 0;
+const lines = headline.map((l) => ({
+  accent: l.accent,
+  words: l.text.split(' ').map((w) => ({ chars: [...w].map((c) => ({ c, i: ci++ })) })),
+}));
+
+// Skill tokens laid out along arcs. tx is in "vw units" scaled by --k in CSS.
+const heights = [20, 34, 26, 40, 22, 36];
+let tx = 30;
+const skillLayout = skills.map((g) => {
+  const signX = tx;
+  tx += 12;
+  const items = g.items.map((name, i) => {
+    const t = { name, x: tx, h: heights[(i + 1) % heights.length], d: (i % 5) * 0.4 };
+    tx += 11.5;
+    return t;
+  });
+  tx += 8;
+  return { group: g.group, signX, items };
+});
+const skillCount = skills.reduce((n, g) => n + g.items.length, 0);
+
+const answers = {
+  'Who is Bose?': `Bose A S is an engineer, product builder and entrepreneur based in ${site.location}. ${intro[2]}`,
+  Experience: `${experience.role} at ${experience.company}. Journey: ${experience.journey.join(' → ')}. Areas: ${experience.areas.join('; ')}. Project context: ${experience.context}`,
+  Skills: skills.map((g) => `${g.group}: ${g.items.join(', ')}`).join('. ') + '.',
+  Projects: projects.map((p) => `${p.data.title} (${p.data.status})`).join(', ') + '. Open any portal for its case study.',
+  Education: `${education.degree}, ${education.institution} (${education.years}). ${education.achievement}. Leadership: ${education.leadership.map((l) => `${l.role}, ${l.org}`).join('; ')}.`,
+  Ventures: `${venture.name}: ${venture.blurb} Independent experiments: ${projects.map((p) => p.data.title).join(', ')}.`,
+  Contact: `Email ${site.email}. GitHub, LinkedIn and Instagram links are at the finish line of the world.`,
+};
+const nav = levels.filter((l) => l.id !== 'skills');
 ---
 
-<Base>
-  <!-- Hero -->
-  <section class="mx-auto max-w-6xl px-5 pb-20 pt-16 sm:pt-24" data-assistant="hero" id="home">
-    <p class="label">{site.name} · {site.location}</p>
-    <h1 class="mt-5 max-w-4xl text-5xl font-semibold leading-[1.05] sm:text-7xl">
-      I don't just write code.<br />
-      <span class="text-accent">I build things that work.</span>
-    </h1>
-    <p class="mt-6 max-w-xl text-lg text-muted">{site.tagline}</p>
-    <div class="mt-9 flex flex-wrap gap-3">
-      <a href={`${base}/projects/`} class="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-medium text-bg transition-opacity hover:opacity-90">
-        See my work <ArrowRight size={16} aria-hidden="true" />
-      </a>
-      <a href="#contact" class="rounded-lg border border-line px-5 py-3 text-sm transition-colors hover:border-accent/60">Get in touch</a>
-      {site.hasResume && (
-        <a href={`${base}/resume.pdf`} class="inline-flex items-center gap-2 rounded-lg border border-line px-5 py-3 text-sm transition-colors hover:border-accent/60">
-          <Download size={16} aria-hidden="true" /> Resume
-        </a>
-      )}
+<Base title={site.title} description={site.description} page="home" immersive>
+  <!-- Preloader -->
+  <div class="preloader" id="preloader" role="status" aria-live="polite">
+    <div class="pl-inner">
+      <div class="pl-count"><span id="pl-num">0</span><small>%</small></div>
+      <div class="pl-bar"><i id="pl-bar"></i></div>
+      <div class="pl-label label"><span>Loading portfolio</span><span>{site.name}</span></div>
     </div>
-    <ul class="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3">
-      {identities.map((i) => (
-        <li class="bg-surface p-6">
-          <p class="label">{i.key}</p>
-          <p class="mt-3 text-sm leading-relaxed text-muted">{i.text}</p>
-        </li>
-      ))}
-    </ul>
-  </section>
+  </div>
 
-  <!-- Introduction -->
-  <section class="mx-auto max-w-6xl px-5 py-20" data-assistant="intro" id="about-intro">
-    <SectionHead eyebrow="Introduction" title="An engineer who learns by building." />
-    <div class="reveal max-w-2xl space-y-4 leading-relaxed text-muted">
-      {intro.map((p) => <p>{p}</p>)}
+  <!-- Film effects -->
+  <div class="fx fx-grain" aria-hidden="true"></div>
+  <div class="fx fx-vignette" aria-hidden="true"></div>
+  <div class="fx fx-spot" id="spot" aria-hidden="true"></div>
+  <div class="fx fx-bars" aria-hidden="true"></div>
+
+  <!-- HUD -->
+  <header class="hud">
+    <a href={`${base}/`} class="hud-logo">{site.name}<b>.</b></a>
+    <div class="hud-level" aria-hidden="true">
+      <div class="hud-level-name"><b id="hud-name">Prologue</b><span id="hud-sub">Boot sequence</span></div>
+      <div class="hud-track"><i id="hud-bar"></i></div>
     </div>
-    <a href={`${base}/about/`} class="reveal mt-6 inline-flex items-center gap-2 text-sm text-accent">
-      More about me <ArrowRight size={16} aria-hidden="true" />
-    </a>
-  </section>
-
-  <!-- Featured projects -->
-  <section class="mx-auto max-w-6xl px-5 py-20" data-assistant="projects" id="projects">
-    <SectionHead
-      eyebrow="Projects"
-      title="Things I've built and explored."
-      lead="Each project is labelled by what it actually is: a product, an experiment or a concept."
-    />
-    <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-      {featured.map((p) => (
-        <ProjectCard slug={p.id} title={p.data.title} summary={p.data.summary} category={p.data.category} status={p.data.status} stack={p.data.stack} />
-      ))}
+    <div class="hud-stats">
+      <span class="hud-xp">XP <b id="hud-xp">0</b></span>
+      <span class="hud-skills" style="color:var(--color-muted)"><b id="hud-sk" style="color:var(--color-ink)">0</b>/{skillCount} skills</span>
+      <button class="hud-btn" id="snd" aria-pressed="false" aria-label="Toggle sound">Sound off</button>
+      <button class="hud-btn" id="menu-btn" aria-expanded="false" aria-controls="hud-menu">Levels</button>
     </div>
-  </section>
+    <nav class="hud-menu" id="hud-menu" aria-label="Levels" hidden>
+      {nav.map((l, i) => <a href={`#${l.id}`} data-jump={l.id}>{l.nav}<span>{String(i).padStart(2, '0')}</span></a>)}
+      <a href="#play" data-jump="play">Play<span>++</span></a>
+    </nav>
+  </header>
 
-  <!-- Experience -->
-  <section class="mx-auto max-w-6xl px-5 py-20" data-assistant="experience" id="experience">
-    <SectionHead eyebrow="Experience" title="Backend and payments at Juspay." />
-    <div class="reveal rounded-2xl border border-line bg-surface p-6 sm:p-8">
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 class="text-2xl font-semibold">{experience.role}</h3>
-          <p class="mt-1 text-muted">{experience.company} · {experience.location}</p>
-        </div>
-        <ol class="flex flex-wrap items-center gap-2 font-mono text-xs text-muted">
-          {experience.journey.map((j, i) => (
-            <li class="flex items-center gap-2">
-              <span class="rounded-full border border-line px-3 py-1">{j}</span>
-              {i < experience.journey.length - 1 && <span aria-hidden="true">→</span>}
-            </li>
-          ))}
-        </ol>
-      </div>
-      <p class="mt-6 text-sm text-muted">{experience.context}</p>
-      <ul class="mt-6 grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
-        {experience.areas.map((a) => (
-          <li class="flex gap-2"><span class="text-accent" aria-hidden="true">›</span>{a}</li>
-        ))}
-      </ul>
-      <p class="mt-6 border-t border-line pt-4 font-mono text-xs text-muted">{experience.note}</p>
-    </div>
-  </section>
+  <div class="banner" id="banner" aria-hidden="true"><span class="label" id="ban-k"></span><h2 id="ban-t"></h2></div>
+  <div class="toast" id="toast" role="status"></div>
 
-  <!-- Skills -->
-  <section class="mx-auto max-w-6xl px-5 py-20" data-assistant="skills" id="skills">
-    <SectionHead eyebrow="Technical skills" title="Tools I use and can explain." />
-    <div class="grid gap-5 sm:grid-cols-2">
-      {skills.map((g) => (
-        <div class="reveal rounded-2xl border border-line bg-surface p-6">
-          <p class="label">{g.group}</p>
-          <ul class="mt-4 flex flex-wrap gap-2">
-            {g.items.map((i) => (
-              <li class="rounded-md border border-line px-3 py-1 font-mono text-xs text-ink">{i}</li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
-  </section>
+  <!-- THE WORLD -->
+  <section class="world" id="world" data-world aria-label="Interactive portfolio world">
+    <div class="stage">
+      <div class="layer sky" data-depth="0.02" id="sky"><div class="moon"></div></div>
+      <div class="layer" data-depth="0.07" id="far"></div>
+      <div class="layer" data-depth="0.2" id="mid"></div>
+      <div class="fog"></div>
 
-  <!-- Ventures -->
-  <section class="mx-auto max-w-6xl px-5 py-20" data-assistant="ventures" id="ventures">
-    <SectionHead eyebrow="Ventures" title="Beyond Code – Building Businesses" lead={`${venture.name}: ${venture.blurb}`} />
-    <ul class="divide-y divide-line rounded-2xl border border-line bg-surface">
-      {ventures.map((p) => (
-        <li>
-          <a href={`${base}/projects/${p.id}/`} class="reveal flex flex-wrap items-center justify-between gap-3 px-6 py-5 transition-colors hover:bg-bg/60">
-            <div>
-              <p class="font-display text-lg font-semibold">{p.data.title}</p>
-              <p class="text-sm text-muted">{p.data.category}</p>
+      <div class="track" id="track">
+        <!-- Prologue -->
+        <section class="panel" id="home" data-level="home" style="width:105vw">
+          <div class="panel-in hero-in">
+            <p class="label">{site.name} · {site.location}</p>
+            <h1 class="hero-title" aria-label={headline.map((h) => h.text).join(' ')}>
+              {lines.map((l) => (
+                <span class="line" aria-hidden="true">
+                  {l.words.map((w) => (
+                    <>
+                      <span class="w">
+                        {l.accent
+                          ? <em>{w.chars.map((c) => <span class="c" style={`--i:${c.i}`}>{c.c}</span>)}</em>
+                          : w.chars.map((c) => <span class="c" style={`--i:${c.i}`}>{c.c}</span>)}
+                      </span>{' '}
+                    </>
+                  ))}
+                  <br />
+                </span>
+              ))}
+            </h1>
+            <p class="hero-sub">{site.tagline}</p>
+            <ul class="hero-id">
+              {identities.map((i) => <li class="tag">{i.key}</li>)}
+            </ul>
+            <p class="hero-hint">
+              <span><span class="key">→</span> or scroll to run</span>
+              <span><span class="key">Space</span> jump</span>
+              <span>Collect coins · squash bugs</span>
+            </p>
+          </div>
+        </section>
+
+        <!-- Level 1: Origin -->
+        <section class="panel" id="about" data-level="about" data-fit>
+          <div class="panel-in">
+            <div class="glass story">
+              <p class="label">Introduction</p>
+              <h3>An engineer who learns by building.</h3>
+              {intro.map((p) => <p>{p}</p>)}
             </div>
-            <span class="rounded-full border border-line px-3 py-1 font-mono text-xs text-muted">{p.data.status}</span>
-          </a>
-        </li>
-      ))}
-    </ul>
-  </section>
+            <div class="glass edu">
+              <p class="trophy" aria-hidden="true">🏆</p>
+              <p class="label">Education & achievements</p>
+              <h3>{education.achievement}</h3>
+              <p>{education.degree}, {education.institution} ({education.years})</p>
+              <ul class="quest" style="flex-direction:column;align-items:flex-start">
+                {education.leadership.map((l) => <li><span class="step">{l.role}</span> <span style="color:var(--color-muted);font-size:13px">{l.org}</span></li>)}
+              </ul>
+            </div>
+          </div>
+        </section>
 
-  <!-- Achievements -->
-  <section class="mx-auto max-w-6xl px-5 py-20" data-assistant="achievements" id="achievements">
-    <SectionHead eyebrow="Education & achievements" title={education.achievement} lead={`${education.degree}, ${education.institution} (${education.years}).`} />
-    <ul class="grid gap-5 md:grid-cols-3">
-      {education.leadership.map((l) => (
-        <li class="reveal rounded-2xl border border-line bg-surface p-6">
-          <p class="label">Leadership</p>
-          <p class="mt-3 font-display text-lg font-semibold">{l.role}</p>
-          <p class="text-sm text-muted">{l.org}</p>
-        </li>
-      ))}
-    </ul>
-  </section>
+        <!-- Level 2: Experience -->
+        <section class="panel" id="experience" data-level="experience" data-fit>
+          <div class="panel-in">
+            <div class="glass exp">
+              <p class="label">Experience</p>
+              <h3>{experience.role}</h3>
+              <p>{experience.company} · {experience.location}</p>
+              <div class="quest">
+                {experience.journey.map((j, i) => (
+                  <><span class="step">{j}</span>{i < experience.journey.length - 1 && <span aria-hidden="true" style="color:var(--color-muted)">→</span>}</>
+                ))}
+              </div>
+              <p>{experience.context}</p>
+              <ul class="xp-list">{experience.areas.map((a) => <li>{a}</li>)}</ul>
+              <p style="margin-top:14px;font-family:var(--font-mono);font-size:11px">{experience.note}</p>
+            </div>
+          </div>
+        </section>
 
-  <!-- Creator -->
-  <section class="mx-auto max-w-6xl px-5 py-20" data-assistant="creator" id="creator">
-    <SectionHead eyebrow="Beyond Code" title="Creator & community." lead={creator.blurb} />
-    <ul class="reveal flex flex-wrap gap-2">
-      {creator.topics.map((t) => <li class="rounded-full border border-line px-4 py-1.5 text-sm text-muted">{t}</li>)}
-    </ul>
-    <ul class="reveal mt-6 flex flex-wrap gap-3">
-      {socials.filter((s) => s.icon === 'instagram').map((s) => (
-        <li>
-          <a href={s.href} target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2 text-sm transition-colors hover:border-accent/60">
-            <SocialIcon name="instagram" size={16} /> {s.label.replace('Instagram · ', '')}
-          </a>
-        </li>
-      ))}
-    </ul>
-  </section>
+        <!-- Side quest: Skills -->
+        <section class="panel" id="skills" data-level="skills" style="width:calc(250vw * var(--k, 1))">
+          <div class="panel-in skills-in" style="inset:0;position:absolute;left:0">
+            {skillLayout.map((g) => (
+              <>
+                <span class="sign" style={`left:calc(${g.signX}vw * var(--k, 1));bottom:calc(var(--ground) + 4vh)`}>{g.group} ▸</span>
+                {g.items.map((t) => (
+                  <span class="token" data-token data-skill={t.name} style={`left:calc(${t.x}vw * var(--k, 1));bottom:calc(var(--ground) + ${t.h}vh + var(--char-h) * .35);--d:${t.d}s`}>{t.name}</span>
+                ))}
+              </>
+            ))}
+          </div>
+        </section>
 
-  <!-- Contact -->
-  <section class="mx-auto max-w-6xl px-5 py-24" data-assistant="contact" id="contact">
-    <div class="reveal rounded-3xl border border-line bg-surface p-8 sm:p-14">
-      <p class="label">Contact</p>
-      <h2 class="mt-3 max-w-2xl text-3xl font-semibold sm:text-5xl">Let's build something, or just talk shop.</h2>
-      <a href={`mailto:${site.email}`} class="mt-8 inline-block break-all font-mono text-lg text-accent underline underline-offset-4">{site.email}</a>
-      <ul class="mt-8 flex flex-wrap gap-3">
-        {socials.map((s) => (
-          <li>
-            <a href={s.href} target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2 text-sm text-muted transition-colors hover:border-accent/60 hover:text-ink">
-              <SocialIcon name={s.icon} size={16} /> {s.label}
-            </a>
-          </li>
-        ))}
-      </ul>
+        <!-- Level 3: Projects -->
+        <section class="panel" id="projects" data-level="projects" data-fit>
+          <div class="panel-in portals-in">
+            {projects.map((p, i) => (
+              <a class="portal" href={`${base}/projects/${p.id}/`}>
+                <span class="big" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                <span class="pn">PORTAL {String(i + 1).padStart(2, '0')} · {p.data.status}</span>
+                <h3>{p.data.title}</h3>
+                <p>{p.data.summary}</p>
+                <span class="enter">Enter case study →</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- Level 4: Ventures -->
+        <section class="panel" id="ventures" data-level="ventures" data-fit>
+          <div class="panel-in street-in">
+            <div class="glass hq">
+              <p class="label">Ventures</p>
+              <h3>Beyond Code – Building Businesses</h3>
+              <p><b style="color:var(--color-ink)">{venture.name}</b>. {venture.blurb}</p>
+            </div>
+            {projects.map((p) => (
+              <a class="shop" href={`${base}/projects/${p.id}/`}>
+                <div class="awning"></div>
+                <p class="sn">{p.data.title}</p>
+                <p class="sc">{p.data.category}</p>
+                <span class="tag">{p.data.status}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- Level 5: Creator -->
+        <section class="panel" id="creator" data-level="creator" data-fit>
+          <div class="panel-in">
+            <div class="glass billboard">
+              <p class="label">Beyond Code</p>
+              <h3>Creator & community.</h3>
+              <p>{creator.blurb}</p>
+              <ul style="display:flex;flex-wrap:wrap;gap:8px;margin:16px 0">
+                {creator.topics.map((t) => <li class="tag">{t}</li>)}
+              </ul>
+              <ul style="display:flex;flex-wrap:wrap;gap:10px">
+                {socials.filter((s) => s.icon === 'instagram').map((s) => (
+                  <li><a class="ig" href={s.href} target="_blank" rel="noopener"><SocialIcon name="instagram" size={16} /> {s.label.replace('Instagram · ', '')}</a></li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Final: Contact -->
+        <section class="panel" id="contact" data-level="contact" data-fit="screen">
+          <div class="panel-in finish-in">
+            <p class="label">Final level · Contact</p>
+            <h2>Let's build something, or just talk shop.</h2>
+            <a class="mail" href={`mailto:${site.email}`}>{site.email}</a>
+            <ul class="socials">
+              {socials.map((s) => (
+                <li><a class="ig" href={s.href} target="_blank" rel="noopener"><SocialIcon name={s.icon} size={16} /> {s.label}</a></li>
+              ))}
+            </ul>
+            <p style="margin-top:22px"><a class="ig" href="#play" data-jump="play">Bonus level: Debug Run →</a></p>
+          </div>
+          <div class="flag" aria-hidden="true"></div>
+        </section>
+      </div>
+
+      <div class="layer fore" id="fore" data-depth="1.35"></div>
+      <div class="ground" id="ground"></div>
+
+      <div class="player" id="player" role="button" tabindex="0" aria-label="Bo, your guide. Press to hear a tip.">
+        <div class="flip"><Character /></div>
+      </div>
+      <div class="bubble" id="bubble" role="status" aria-live="polite"><b>Bo</b><span id="bubble-t"></span></div>
     </div>
   </section>
+
+  <!-- BONUS LEVEL -->
+  <section class="play" id="play" aria-label="Bonus level">
+    <div class="play-in">
+      <p class="label">Bonus level</p>
+      <h2 style="font-size:clamp(32px,6vw,72px);font-weight:700;letter-spacing:-.04em;line-height:1;margin-top:10px">Debug Run</h2>
+      <p style="color:var(--color-muted);margin-top:12px;max-width:560px">Production is on fire and the bugs are loose. Jump over them, grab the XP, and see how far you get. <span class="key">Space</span> or tap to jump.</p>
+      <div class="game-wrap" id="game-wrap">
+        <canvas id="game" width="1000" height="340" aria-label="Debug Run mini-game"></canvas>
+        <div class="game-hud"><span>SCORE <b id="g-score" style="color:var(--color-ink)">0</b></span><span>BEST <b id="g-best" style="color:var(--gold)">0</b></span></div>
+        <div class="game-msg" id="g-msg">
+          <h3 id="g-title">Ready?</h3>
+          <p id="g-sub">Press Space or tap to start</p>
+          <button class="btn-play" id="g-btn" type="button">Play</button>
+        </div>
+      </div>
+      <p style="margin-top:36px;font-size:13px;color:var(--color-muted)">© {new Date().getFullYear()} {site.name} · {site.location} · <a href={`${base}/about/`} style="color:var(--color-accent)">About</a> · <a href={`${base}/projects/`} style="color:var(--color-accent)">All projects</a></p>
+    </div>
+  </section>
+
+  <!-- Ask Bo -->
+  <button class="chat-fab" id="chat-fab" type="button" aria-expanded="false" aria-controls="chat"><i></i> Ask Bo</button>
+  <div class="chat" id="chat" hidden role="dialog" aria-label="Chat with Bo">
+    <div class="chat-head"><b>Bo · portfolio guide</b><button id="chat-x" type="button" aria-label="Close chat" style="color:var(--color-muted)">✕</button></div>
+    <div class="chat-body" id="chat-body"></div>
+    <div class="chat-chips" id="chat-chips">{chatChips.map((c) => <button type="button" data-q={c}>{c}</button>)}</div>
+    <form class="chat-form" id="chat-form"><input id="chat-in" placeholder="Ask about Bose…" autocomplete="off" aria-label="Your question" /><button type="submit">Send</button></form>
+  </div>
+
+  <script type="application/json" id="game-data" set:html={JSON.stringify({ levels, answers, email: site.email, skillCount })}></script>
+  <script>
+    import '../scripts/preloader';
+    import '../scripts/world';
+    import '../scripts/game';
+    import '../scripts/chat';
+  </script>
 </Base>
