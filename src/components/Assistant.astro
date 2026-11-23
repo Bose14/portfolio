@@ -1,0 +1,246 @@
+---
+import { assistant } from '../config';
+
+interface Props { page: 'home' | 'about' | 'projects' | 'project' | 'notfound' }
+const { page } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const data = JSON.stringify({
+  name: assistant.name,
+  stops: assistant.stops,
+  pages: assistant.pages,
+  page,
+  home: `${base}/`,
+});
+---
+
+<div id="assistant" data-config={data} class="pointer-events-none fixed left-0 top-0 z-40 hidden" aria-label={`${assistant.name}, your guide`} role="complementary">
+  <div class="a-wrap relative">
+    <div
+      id="a-bubble"
+      class="a-bubble pointer-events-auto absolute bottom-full mb-2 w-[min(280px,calc(100vw-2rem))] rounded-2xl border border-accent/40 bg-surface p-4 text-sm leading-relaxed text-ink shadow-2xl shadow-black/60"
+      hidden
+    >
+      <p class="label mb-1">{assistant.name}</p>
+      <p id="a-text" aria-live="polite"></p>
+      <div class="mt-3 flex items-center justify-between gap-3 font-mono text-[11px] text-muted">
+        <button type="button" id="a-hide" class="underline underline-offset-4 hover:text-ink">Hide guide</button>
+        <button type="button" id="a-close" class="hover:text-ink">Close</button>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      id="a-avatar"
+      class="a-avatar pointer-events-auto block"
+      aria-label={`Talk to ${assistant.name}, the portfolio guide`}
+      aria-expanded="false"
+      aria-controls="a-bubble"
+    >
+      {assistant.avatarSrc ? (
+        <img src={assistant.avatarSrc} alt="" class="h-full w-full object-contain" />
+      ) : (
+        <svg viewBox="0 0 120 150" class="h-full w-full" aria-hidden="true">
+          <!-- hoodie -->
+          <path d="M16 150C16 112 36 98 60 98s44 14 44 52Z" fill="#5B6BD6" />
+          <path d="M44 100c4 14 28 14 32 0" fill="none" stroke="#3E4BAA" stroke-width="4" stroke-linecap="round" />
+          <path d="M54 112v14M66 112v14" stroke="#E9EDF5" stroke-width="2.5" stroke-linecap="round" />
+          <!-- neck + head -->
+          <rect x="51" y="86" width="18" height="16" rx="6" fill="#C98F69" />
+          <circle cx="33" cy="66" r="5" fill="#D99B74" />
+          <circle cx="87" cy="66" r="5" fill="#D99B74" />
+          <ellipse cx="60" cy="62" rx="27" ry="30" fill="#E2A982" />
+          <!-- hair -->
+          <path d="M32 58C28 28 46 20 62 20c18 0 30 14 26 38-4-12-12-18-28-18S36 46 32 58Z" fill="#1B1F2A" />
+          <!-- glasses -->
+          <circle cx="49" cy="64" r="9" fill="none" stroke="#E9EDF5" stroke-width="2.5" />
+          <circle cx="71" cy="64" r="9" fill="none" stroke="#E9EDF5" stroke-width="2.5" />
+          <path d="M58 64h4" stroke="#E9EDF5" stroke-width="2.5" />
+          <g class="a-eyes">
+            <ellipse cx="49" cy="64" rx="2.4" ry="3" fill="#1B1F2A" />
+            <ellipse cx="71" cy="64" rx="2.4" ry="3" fill="#1B1F2A" />
+          </g>
+          <path d="M51 78c5 5 13 5 18 0" fill="none" stroke="#7A4A33" stroke-width="2.5" stroke-linecap="round" />
+          <!-- waving arm -->
+          <g class="a-arm">
+            <path d="M92 116c10-4 16-18 14-30" fill="none" stroke="#5B6BD6" stroke-width="12" stroke-linecap="round" />
+            <circle cx="106" cy="82" r="7" fill="#E2A982" />
+          </g>
+        </svg>
+      )}
+    </button>
+  </div>
+</div>
+
+<button
+  type="button"
+  id="a-show"
+  class="fixed bottom-4 right-4 z-40 hidden rounded-full border border-line bg-surface px-3.5 py-2 font-mono text-xs text-muted hover:text-ink"
+>
+  Show guide
+</button>
+
+<style>
+  .a-avatar { width: 64px; height: 84px; cursor: pointer; animation: a-bob 4s ease-in-out infinite; }
+  @media (min-width: 768px) { .a-avatar { width: 112px; height: 140px; } }
+  #assistant { transition: transform 1.1s cubic-bezier(.22,.8,.24,1); will-change: transform; }
+  .a-bubble { transition: opacity .25s ease, transform .25s ease; }
+  .a-bubble[hidden] { display: none; }
+  .a-bubble.right { right: 0; }
+  .a-bubble.left { left: 0; }
+  .a-arm { transform-origin: 92px 116px; }
+  #assistant.waving .a-arm { animation: a-wave .5s ease-in-out 5; }
+  #assistant.moving .a-avatar { animation: a-tilt .5s ease-in-out infinite; }
+  .a-eyes { transform-origin: 60px 64px; animation: a-blink 5s infinite; }
+  @keyframes a-bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+  @keyframes a-tilt { 0%,100% { transform: rotate(-3deg) } 50% { transform: rotate(3deg) } }
+  @keyframes a-wave { 0%,100% { transform: rotate(0) } 50% { transform: rotate(-22deg) } }
+  @keyframes a-blink { 0%,94%,100% { transform: scaleY(1) } 97% { transform: scaleY(.1) } }
+  @media (prefers-reduced-motion: reduce) {
+    #assistant { transition: none; }
+    .a-avatar, .a-eyes, #assistant.waving .a-arm, #assistant.moving .a-avatar { animation: none; }
+  }
+</style>
+
+<script>
+  type Stop = { side: 'left' | 'right'; level: number; text: string };
+  type Cfg = {
+    name: string;
+    stops: Record<string, Stop>;
+    pages: Record<string, string>;
+    page: string;
+    home: string;
+  };
+
+  const root = document.getElementById('assistant');
+  const showBtn = document.getElementById('a-show');
+  if (root && showBtn) init(root, showBtn);
+
+  function init(root: HTMLElement, showBtn: HTMLElement) {
+    const cfg: Cfg = JSON.parse(root.dataset.config || '{}');
+    const bubble = document.getElementById('a-bubble') as HTMLElement;
+    const text = document.getElementById('a-text') as HTMLElement;
+    const avatar = document.getElementById('a-avatar') as HTMLButtonElement;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let hidden = false;
+    try { hidden = localStorage.getItem('guide-hidden') === '1'; } catch { /* ignore */ }
+
+    let current: Stop = cfg.stops.hero ?? { side: 'right', level: 0, text: '' };
+    let message = '';
+    let closeTimer: number | undefined;
+    let moveTimer: number | undefined;
+
+    const isDesktop = () => matchMedia('(min-width: 768px)').matches;
+
+    function place(stop: Stop, animate = true) {
+      const w = isDesktop() ? 112 : 64;
+      const h = isDesktop() ? 140 : 84;
+      const margin = isDesktop() ? 24 : 12;
+      const vw = document.documentElement.clientWidth;
+      const vh = window.innerHeight;
+      // Mobile: always docked bottom-right so it never covers content.
+      const side = isDesktop() ? stop.side : 'right';
+      const level = isDesktop() ? stop.level : 0;
+      const x = side === 'right' ? vw - w - margin : margin;
+      const minTop = 250;
+      const y = Math.max(minTop, vh - h - margin - level * vh * 0.2);
+      if (animate && !reduce) {
+        root.classList.add('moving');
+        window.clearTimeout(moveTimer);
+        moveTimer = window.setTimeout(() => root.classList.remove('moving'), 1100);
+      }
+      root.style.transform = `translate(${x}px, ${y}px)`;
+      bubble.classList.toggle('right', side === 'right');
+      bubble.classList.toggle('left', side === 'left');
+    }
+
+    function open(msg: string, autoClose = true) {
+      message = msg;
+      text.textContent = msg;
+      bubble.hidden = false;
+      avatar.setAttribute('aria-expanded', 'true');
+      window.clearTimeout(closeTimer);
+      if (autoClose) closeTimer = window.setTimeout(close, isDesktop() ? 16000 : 9000);
+    }
+
+    function close() {
+      bubble.hidden = true;
+      avatar.setAttribute('aria-expanded', 'false');
+    }
+
+    function wave() {
+      if (reduce) return;
+      root.classList.remove('waving');
+      void root.offsetWidth;
+      root.classList.add('waving');
+    }
+
+    function setHidden(v: boolean) {
+      hidden = v;
+      try { localStorage.setItem('guide-hidden', v ? '1' : '0'); } catch { /* ignore */ }
+      root.classList.toggle('hidden', v);
+      showBtn.classList.toggle('hidden', !v);
+      if (v) close();
+    }
+
+    function goTo(key: string) {
+      const stop = cfg.stops[key];
+      if (!stop || stop === current && !bubble.hidden) return;
+      current = stop;
+      place(stop);
+      if (!hidden) {
+        open(stop.text);
+        wave();
+      }
+    }
+
+    avatar.addEventListener('click', () => {
+      if (bubble.hidden) { open(message || current.text, false); wave(); } else close();
+    });
+    document.getElementById('a-close')?.addEventListener('click', close);
+    document.getElementById('a-hide')?.addEventListener('click', () => setHidden(true));
+    showBtn.addEventListener('click', () => {
+      setHidden(false);
+      place(current, false);
+      open(current.text);
+      wave();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    window.addEventListener('resize', () => place(current, false));
+
+    // Initial placement.
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-assistant]'));
+    root.classList.remove('hidden');
+    if (sections.length === 0) {
+      // Content pages: stay docked bottom-right with a page-level message.
+      const msg = cfg.pages[cfg.page] ?? '';
+      const stop: Stop = { side: 'right', level: 0, text: msg };
+      current = stop;
+      place(stop, false);
+      if (hidden) setHidden(true);
+      else window.setTimeout(() => { open(msg); wave(); }, 700);
+      return;
+    }
+
+    place(current, false);
+    if (hidden) {
+      setHidden(true);
+    } else {
+      window.setTimeout(() => { open(current.text); wave(); }, 900);
+    }
+
+    // Move to whichever section crosses the middle of the viewport.
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            const key = (e.target as HTMLElement).dataset.assistant;
+            if (key) goTo(key);
+          }
+        }
+      },
+      { rootMargin: '-45% 0px -50% 0px' }
+    );
+    sections.forEach((s) => io.observe(s));
+  }
+</script>

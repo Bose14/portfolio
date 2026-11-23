@@ -1,0 +1,60 @@
+---
+import { site } from '../config';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const home = `${base}/`;
+const links = [
+  { label: 'Home', href: home },
+  { label: 'About', href: `${base}/about/` },
+  { label: 'Experience', href: `${home}#experience` },
+  { label: 'Projects', href: `${base}/projects/` },
+  { label: 'Ventures', href: `${home}#ventures` },
+  { label: 'Beyond Code', href: `${home}#creator` },
+  { label: 'Contact', href: `${home}#contact` },
+];
+---
+
+<header class="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
+    <a href={home} class="font-display text-lg font-semibold tracking-tight">
+      {site.name}<span class="text-accent">.</span>
+    </a>
+    <nav aria-label="Primary" class="hidden lg:block">
+      <ul class="flex items-center gap-6 text-sm text-muted">
+        {links.map((l) => (
+          <li><a href={l.href} class="transition-colors hover:text-ink">{l.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+    <button
+      id="menu-btn"
+      class="rounded-md border border-line px-3 py-1.5 font-mono text-xs lg:hidden"
+      aria-expanded="false"
+      aria-controls="mobile-nav"
+    >
+      Menu
+    </button>
+  </div>
+  <nav id="mobile-nav" aria-label="Mobile" class="hidden border-t border-line lg:hidden">
+    <ul class="mx-auto grid max-w-6xl gap-1 px-5 py-3 text-sm">
+      {links.map((l) => (
+        <li><a href={l.href} class="block rounded-md px-2 py-2 text-muted hover:bg-surface hover:text-ink">{l.label}</a></li>
+      ))}
+    </ul>
+  </nav>
+</header>
+
+<script>
+  const btn = document.getElementById('menu-btn') as HTMLButtonElement | null;
+  const nav = document.getElementById('mobile-nav');
+  btn?.addEventListener('click', () => {
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!open));
+    nav?.classList.toggle('hidden', open);
+  });
+  nav?.querySelectorAll('a').forEach((a) =>
+    a.addEventListener('click', () => {
+      btn?.setAttribute('aria-expanded', 'false');
+      nav.classList.add('hidden');
+    })
+  );
+</script>

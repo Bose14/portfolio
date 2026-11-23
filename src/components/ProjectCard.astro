@@ -1,0 +1,32 @@
+---
+import { ArrowUpRight } from '@lucide/astro';
+interface Props {
+  slug: string;
+  title: string;
+  summary: string;
+  category: string;
+  status: string;
+  stack?: string[];
+}
+const { slug, title, summary, category, status, stack = [] } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<a
+  href={`${base}/projects/${slug}/`}
+  class="reveal group flex h-full flex-col rounded-2xl border border-line bg-surface p-6 transition-colors hover:border-accent/60"
+>
+  <div class="flex items-center justify-between gap-3">
+    <span class="label">{category}</span>
+    <span class="rounded-full border border-line px-2.5 py-0.5 font-mono text-[11px] text-muted">{status}</span>
+  </div>
+  <h3 class="mt-4 text-xl font-semibold">{title}</h3>
+  <p class="mt-2 flex-1 text-sm leading-relaxed text-muted">{summary}</p>
+  {stack.length > 0 && (
+    <p class="mt-4 font-mono text-xs text-muted">{stack.join(' · ')}</p>
+  )}
+  <span class="mt-5 inline-flex items-center gap-1 text-sm text-accent">
+    Case study
+    <ArrowUpRight size={16} class="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+  </span>
+</a>
