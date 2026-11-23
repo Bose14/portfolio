@@ -1,54 +1,32 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import Character from '../components/Character.astro';
 import SocialIcon from '../components/SocialIcon.astro';
-import '../styles/world.css';
-import { site, socials, intro, identities, experience, skills, education, venture, creator, levels, chatChips } from '../config';
+import { ArrowRight, ArrowUpRight, Download } from '@lucide/astro';
+import '../styles/landing.css';
+import { site, socials, intro, identities, experience, skills, education, venture, creator, companion, chatChips } from '../config';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const photo = `${base}/images/bose.webp`;
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 
-// Hero headline split into words and characters for the staggered reveal.
-const headline = [
-  { text: "I don't just write code.", accent: false },
-  { text: 'I build things that work.', accent: true },
-];
-let ci = 0;
-const lines = headline.map((l) => ({
-  accent: l.accent,
-  words: l.text.split(' ').map((w) => ({ chars: [...w].map((c) => ({ c, i: ci++ })) })),
-}));
+const nameChars = [...'BOSE A S'].map((c, i) => ({ c: c === ' ' ? ' ' : c, i }));
+const statement = intro[0].split(' ');
+const allSkills = skills.flatMap((g) => g.items);
+const pad2 = (n: number) => String(n).padStart(2, '0');
 
-// Skill tokens laid out along arcs. tx is in "vw units" scaled by --k in CSS.
-const heights = [20, 34, 26, 40, 22, 36];
-let tx = 30;
-const skillLayout = skills.map((g) => {
-  const signX = tx;
-  tx += 12;
-  const items = g.items.map((name, i) => {
-    const t = { name, x: tx, h: heights[(i + 1) % heights.length], d: (i % 5) * 0.4 };
-    tx += 11.5;
-    return t;
-  });
-  tx += 8;
-  return { group: g.group, signX, items };
-});
-const skillCount = skills.reduce((n, g) => n + g.items.length, 0);
-
-const answers = {
+const answers: Record<string, string> = {
   'Who is Bose?': `Bose A S is an engineer, product builder and entrepreneur based in ${site.location}. ${intro[2]}`,
-  Experience: `${experience.role} at ${experience.company}. Journey: ${experience.journey.join(' → ')}. Areas: ${experience.areas.join('; ')}. Project context: ${experience.context}`,
+  Experience: `${experience.role} at ${experience.company}. Journey: ${experience.journey.join(' → ')}. Areas: ${experience.areas.join('; ')}.`,
   Skills: skills.map((g) => `${g.group}: ${g.items.join(', ')}`).join('. ') + '.',
-  Projects: projects.map((p) => `${p.data.title} (${p.data.status})`).join(', ') + '. Open any portal for its case study.',
+  Projects: projects.map((p) => `${p.data.title} (${p.data.status})`).join(', ') + '. Open any card for its case study.',
   Education: `${education.degree}, ${education.institution} (${education.years}). ${education.achievement}. Leadership: ${education.leadership.map((l) => `${l.role}, ${l.org}`).join('; ')}.`,
   Ventures: `${venture.name}: ${venture.blurb} Independent experiments: ${projects.map((p) => p.data.title).join(', ')}.`,
-  Contact: `Email ${site.email}. GitHub, LinkedIn and Instagram links are at the finish line of the world.`,
+  Contact: `Email ${site.email}. GitHub, LinkedIn and Instagram links are in the contact section.`,
 };
-const nav = levels.filter((l) => l.id !== 'skills');
 ---
 
-<Base title={site.title} description={site.description} page="home" immersive>
+<Base title={site.title} description={site.description} page="home">
   <!-- Preloader -->
   <div class="preloader" id="preloader" role="status" aria-live="polite">
     <div class="pl-inner">
@@ -58,241 +36,211 @@ const nav = levels.filter((l) => l.id !== 'skills');
     </div>
   </div>
 
-  <!-- Film effects -->
   <div class="fx fx-grain" aria-hidden="true"></div>
   <div class="fx fx-vignette" aria-hidden="true"></div>
   <div class="fx fx-spot" id="spot" aria-hidden="true"></div>
   <div class="fx fx-bars" aria-hidden="true"></div>
 
-  <!-- HUD -->
-  <header class="hud">
-    <a href={`${base}/`} class="hud-logo">{site.name}<b>.</b></a>
-    <div class="hud-level" aria-hidden="true">
-      <div class="hud-level-name"><b id="hud-name">Prologue</b><span id="hud-sub">Boot sequence</span></div>
-      <div class="hud-track"><i id="hud-bar"></i></div>
-    </div>
-    <div class="hud-stats">
-      <span class="hud-xp">XP <b id="hud-xp">0</b></span>
-      <span class="hud-skills" style="color:var(--color-muted)"><b id="hud-sk" style="color:var(--color-ink)">0</b>/{skillCount} skills</span>
-      <button class="hud-btn" id="snd" aria-pressed="false" aria-label="Toggle sound">Sound off</button>
-      <button class="hud-btn" id="menu-btn" aria-expanded="false" aria-controls="hud-menu">Levels</button>
-    </div>
-    <nav class="hud-menu" id="hud-menu" aria-label="Levels" hidden>
-      {nav.map((l, i) => <a href={`#${l.id}`} data-jump={l.id}>{l.nav}<span>{String(i).padStart(2, '0')}</span></a>)}
-      <a href="#play" data-jump="play">Play<span>++</span></a>
-    </nav>
-  </header>
-
-  <div class="banner" id="banner" aria-hidden="true"><span class="label" id="ban-k"></span><h2 id="ban-t"></h2></div>
-  <div class="toast" id="toast" role="status"></div>
-
-  <!-- THE WORLD -->
-  <section class="world" id="world" data-world aria-label="Interactive portfolio world">
-    <div class="stage">
-      <div class="layer sky" data-depth="0.02" id="sky"><div class="moon"></div></div>
-      <div class="layer" data-depth="0.07" id="far"></div>
-      <div class="layer" data-depth="0.2" id="mid"></div>
-      <div class="fog"></div>
-
-      <div class="track" id="track">
-        <!-- Prologue -->
-        <section class="panel" id="home" data-level="home" style="width:105vw">
-          <div class="panel-in hero-in">
-            <p class="label">{site.name} · {site.location}</p>
-            <h1 class="hero-title" aria-label={headline.map((h) => h.text).join(' ')}>
-              {lines.map((l) => (
-                <span class="line" aria-hidden="true">
-                  {l.words.map((w) => (
-                    <>
-                      <span class="w">
-                        {l.accent
-                          ? <em>{w.chars.map((c) => <span class="c" style={`--i:${c.i}`}>{c.c}</span>)}</em>
-                          : w.chars.map((c) => <span class="c" style={`--i:${c.i}`}>{c.c}</span>)}
-                      </span>{' '}
-                    </>
-                  ))}
-                  <br />
-                </span>
-              ))}
-            </h1>
-            <p class="hero-sub">{site.tagline}</p>
-            <ul class="hero-id">
-              {identities.map((i) => <li class="tag">{i.key}</li>)}
-            </ul>
-            <p class="hero-hint">
-              <span><span class="key">→</span> or scroll to run</span>
-              <span><span class="key">Space</span> jump</span>
-              <span>Collect coins · squash bugs</span>
-            </p>
-          </div>
-        </section>
-
-        <!-- Level 1: Origin -->
-        <section class="panel" id="about" data-level="about" data-fit>
-          <div class="panel-in">
-            <div class="glass story">
-              <p class="label">Introduction</p>
-              <h3>An engineer who learns by building.</h3>
-              {intro.map((p) => <p>{p}</p>)}
-            </div>
-            <div class="glass edu">
-              <p class="trophy" aria-hidden="true">🏆</p>
-              <p class="label">Education & achievements</p>
-              <h3>{education.achievement}</h3>
-              <p>{education.degree}, {education.institution} ({education.years})</p>
-              <ul class="quest" style="flex-direction:column;align-items:flex-start">
-                {education.leadership.map((l) => <li><span class="step">{l.role}</span> <span style="color:var(--color-muted);font-size:13px">{l.org}</span></li>)}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <!-- Level 2: Experience -->
-        <section class="panel" id="experience" data-level="experience" data-fit>
-          <div class="panel-in">
-            <div class="glass exp">
-              <p class="label">Experience</p>
-              <h3>{experience.role}</h3>
-              <p>{experience.company} · {experience.location}</p>
-              <div class="quest">
-                {experience.journey.map((j, i) => (
-                  <><span class="step">{j}</span>{i < experience.journey.length - 1 && <span aria-hidden="true" style="color:var(--color-muted)">→</span>}</>
-                ))}
-              </div>
-              <p>{experience.context}</p>
-              <ul class="xp-list">{experience.areas.map((a) => <li>{a}</li>)}</ul>
-              <p style="margin-top:14px;font-family:var(--font-mono);font-size:11px">{experience.note}</p>
-            </div>
-          </div>
-        </section>
-
-        <!-- Side quest: Skills -->
-        <section class="panel" id="skills" data-level="skills" style="width:calc(250vw * var(--k, 1))">
-          <div class="panel-in skills-in" style="inset:0;position:absolute;left:0">
-            {skillLayout.map((g) => (
-              <>
-                <span class="sign" style={`left:calc(${g.signX}vw * var(--k, 1));bottom:calc(var(--ground) + 4vh)`}>{g.group} ▸</span>
-                {g.items.map((t) => (
-                  <span class="token" data-token data-skill={t.name} style={`left:calc(${t.x}vw * var(--k, 1));bottom:calc(var(--ground) + ${t.h}vh + var(--char-h) * .35);--d:${t.d}s`}>{t.name}</span>
-                ))}
-              </>
-            ))}
-          </div>
-        </section>
-
-        <!-- Level 3: Projects -->
-        <section class="panel" id="projects" data-level="projects" data-fit>
-          <div class="panel-in portals-in">
-            {projects.map((p, i) => (
-              <a class="portal" href={`${base}/projects/${p.id}/`}>
-                <span class="big" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-                <span class="pn">PORTAL {String(i + 1).padStart(2, '0')} · {p.data.status}</span>
-                <h3>{p.data.title}</h3>
-                <p>{p.data.summary}</p>
-                <span class="enter">Enter case study →</span>
-              </a>
-            ))}
-          </div>
-        </section>
-
-        <!-- Level 4: Ventures -->
-        <section class="panel" id="ventures" data-level="ventures" data-fit>
-          <div class="panel-in street-in">
-            <div class="glass hq">
-              <p class="label">Ventures</p>
-              <h3>Beyond Code – Building Businesses</h3>
-              <p><b style="color:var(--color-ink)">{venture.name}</b>. {venture.blurb}</p>
-            </div>
-            {projects.map((p) => (
-              <a class="shop" href={`${base}/projects/${p.id}/`}>
-                <div class="awning"></div>
-                <p class="sn">{p.data.title}</p>
-                <p class="sc">{p.data.category}</p>
-                <span class="tag">{p.data.status}</span>
-              </a>
-            ))}
-          </div>
-        </section>
-
-        <!-- Level 5: Creator -->
-        <section class="panel" id="creator" data-level="creator" data-fit>
-          <div class="panel-in">
-            <div class="glass billboard">
-              <p class="label">Beyond Code</p>
-              <h3>Creator & community.</h3>
-              <p>{creator.blurb}</p>
-              <ul style="display:flex;flex-wrap:wrap;gap:8px;margin:16px 0">
-                {creator.topics.map((t) => <li class="tag">{t}</li>)}
-              </ul>
-              <ul style="display:flex;flex-wrap:wrap;gap:10px">
-                {socials.filter((s) => s.icon === 'instagram').map((s) => (
-                  <li><a class="ig" href={s.href} target="_blank" rel="noopener"><SocialIcon name="instagram" size={16} /> {s.label.replace('Instagram · ', '')}</a></li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <!-- Final: Contact -->
-        <section class="panel" id="contact" data-level="contact" data-fit="screen">
-          <div class="panel-in finish-in">
-            <p class="label">Final level · Contact</p>
-            <h2>Let's build something, or just talk shop.</h2>
-            <a class="mail" href={`mailto:${site.email}`}>{site.email}</a>
-            <ul class="socials">
-              {socials.map((s) => (
-                <li><a class="ig" href={s.href} target="_blank" rel="noopener"><SocialIcon name={s.icon} size={16} /> {s.label}</a></li>
-              ))}
-            </ul>
-            <p style="margin-top:22px"><a class="ig" href="#play" data-jump="play">Bonus level: Debug Run →</a></p>
-          </div>
-          <div class="flag" aria-hidden="true"></div>
-        </section>
+  <!-- The moving figure: one persistent cutout that travels the page -->
+  <div class="figure" id="figure" aria-hidden="true">
+    <div class="fig-rot" id="fig-rot">
+      <div class="fig-ring2" id="fig-ring2"></div>
+      <div class="fig-ring" id="fig-ring"></div>
+      <div class="fig-glow" id="fig-glow"></div>
+      <div class="fig-body" id="fig-body">
+        <img class="fig-img body" id="fig-torso" src={photo} alt="" width="866" height="1416" decoding="async" />
+        <img class="fig-img head" id="fig-head" src={photo} alt="" width="866" height="1416" decoding="async" />
       </div>
+    </div>
+  </div>
+  <button type="button" class="fig-hit" id="fig-hit" aria-label="Hear what Bose has to say about this section"></button>
+  <div class="bubble" id="bubble" role="status" aria-live="polite"><b class="label">Bose</b><span id="bubble-t"></span></div>
 
-      <div class="layer fore" id="fore" data-depth="1.35"></div>
-      <div class="ground" id="ground"></div>
-
-      <div class="player" id="player" role="button" tabindex="0" aria-label="Bo, your guide. Press to hear a tip.">
-        <div class="flip"><Character /></div>
+  <!-- HERO -->
+  <section class="hero" id="home" data-co="home">
+    <div class="hero-copy">
+      <p class="eyebrow"><b>B</b><span class="label">Portfolio · 2026</span></p>
+      <h1 class="hero-name" aria-label={site.name}>
+        <span aria-hidden="true">{nameChars.map((n) => <span class="mask"><span class="c" style={`--i:${n.i};color:${n.col}`}>{n.c}</span></span>)}</span>
+      </h1>
+      <p class="hero-sub">Engineer · Builder · Creator</p>
+      <p class="meta">
+        <span class="pill">BACKEND</span>
+        <span>{experience.role} at Juspay</span><i class="dot"></i>
+        <span>Payments & eNACH</span><i class="dot"></i>
+        <span>SaaS · AI · IoT</span>
+      </p>
+      <p class="lede">{site.tagline} I work on backend and payment systems at Juspay in {site.location}, and build SaaS, AI and IoT products on the side.</p>
+      <div class="cta">
+        <a class="btn btn-solid" href="#projects"><ArrowRight size={18} aria-hidden="true" /> Explore my work</a>
+        <a class="btn btn-ghost" href="#contact">Get in touch</a>
+        {site.hasResume && <a class="btn btn-ghost" href={`${base}/resume.pdf`}><Download size={18} aria-hidden="true" /> Resume</a>}
+        <button class="btn btn-round" type="button" id="hero-info" aria-label="Open the portfolio guide chat">i</button>
       </div>
-      <div class="bubble" id="bubble" role="status" aria-live="polite"><b>Bo</b><span id="bubble-t"></span></div>
+    </div>
+    <div class="chip chip-a" data-depth="14"><b>{experience.role}</b><span>Juspay Technologies</span></div>
+    <div class="chip chip-b" data-depth="-10"><b>{venture.name}</b><span>Independent ventures</span></div>
+    <div class="chip chip-c" data-depth="-18"><b>Java · Rails · Rust</b><span>Backend stack</span></div>
+    <p class="scroll-hint"><i></i> Scroll</p>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="sec left" id="about" data-co="about">
+    <div class="sec-in">
+      <p class="label reveal">About</p>
+      <p class="statement" id="statement" aria-label={intro[0]}>{statement.map((w) => <><span class="w" aria-hidden="true">{w}</span>{' '}</>)}</p>
+      <div class="cols reveal">
+        {intro.slice(1).map((p) => <p>{p}</p>)}
+      </div>
+      <ul class="ids reveal">
+        {identities.map((i) => <li><h3>{i.key}</h3><p>{i.text}</p></li>)}
+      </ul>
+      <p class="reveal" style="margin-top:28px"><a class="btn btn-ghost" href={`${base}/about/`}>Full story <ArrowUpRight size={16} aria-hidden="true" /></a></p>
     </div>
   </section>
 
-  <!-- BONUS LEVEL -->
-  <section class="play" id="play" aria-label="Bonus level">
-    <div class="play-in">
-      <p class="label">Bonus level</p>
-      <h2 style="font-size:clamp(32px,6vw,72px);font-weight:700;letter-spacing:-.04em;line-height:1;margin-top:10px">Debug Run</h2>
-      <p style="color:var(--color-muted);margin-top:12px;max-width:560px">Production is on fire and the bugs are loose. Jump over them, grab the XP, and see how far you get. <span class="key">Space</span> or tap to jump.</p>
-      <div class="game-wrap" id="game-wrap">
-        <canvas id="game" width="1000" height="340" aria-label="Debug Run mini-game"></canvas>
-        <div class="game-hud"><span>SCORE <b id="g-score" style="color:var(--color-ink)">0</b></span><span>BEST <b id="g-best" style="color:var(--gold)">0</b></span></div>
-        <div class="game-msg" id="g-msg">
-          <h3 id="g-title">Ready?</h3>
-          <p id="g-sub">Press Space or tap to start</p>
-          <button class="btn-play" id="g-btn" type="button">Play</button>
+  <!-- EXPERIENCE -->
+  <section class="sec right" id="experience" data-co="experience">
+    <div class="sec-in">
+      <p class="label reveal">Experience</p>
+      <h2 class="h2 reveal">Backend & <em>payments</em></h2>
+      <div class="card reveal" style="margin-top:36px">
+        <h3 class="role">{experience.role}</h3>
+        <p style="color:var(--color-muted);margin-top:6px">{experience.company} · {experience.location}</p>
+        <div class="journey">
+          {experience.journey.map((j, i) => (<><span class="s">{j}</span>{i < experience.journey.length - 1 && <span class="arr" aria-hidden="true">→</span>}</>))}
         </div>
+        <p style="color:#c1bcc6">{experience.context}</p>
+        <ul class="areas">{experience.areas.map((a) => <li>{a}</li>)}</ul>
+        <p class="note">{experience.note}</p>
       </div>
-      <p style="margin-top:36px;font-size:13px;color:var(--color-muted)">© {new Date().getFullYear()} {site.name} · {site.location} · <a href={`${base}/about/`} style="color:var(--color-accent)">About</a> · <a href={`${base}/projects/`} style="color:var(--color-accent)">All projects</a></p>
     </div>
   </section>
 
-  <!-- Ask Bo -->
-  <button class="chat-fab" id="chat-fab" type="button" aria-expanded="false" aria-controls="chat"><i></i> Ask Bo</button>
-  <div class="chat" id="chat" hidden role="dialog" aria-label="Chat with Bo">
-    <div class="chat-head"><b>Bo · portfolio guide</b><button id="chat-x" type="button" aria-label="Close chat" style="color:var(--color-muted)">✕</button></div>
+  <!-- SKILLS -->
+  <section class="sec" id="skills" data-co="skills" style="padding-left:0;padding-right:0">
+    <div class="sec-in" style="padding:0 var(--pad)">
+      <p class="label reveal">Technical skills</p>
+      <h2 class="h2 reveal">Tools I <em>use</em></h2>
+    </div>
+    <div class="marq" aria-hidden="true" style="margin-top:36px">
+      <div class="marq-row">{[...allSkills, ...allSkills].map((s) => <span>{s}</span>)}</div>
+    </div>
+    <div class="marq" aria-hidden="true">
+      <div class="marq-row rev">{[...[...allSkills].reverse(), ...[...allSkills].reverse()].map((s) => <span>{s}</span>)}</div>
+    </div>
+    <div class="sec-in" style="padding:0 var(--pad)">
+      <div class="groups">
+        {skills.map((g) => (
+          <div class="group reveal"><p class="label">{g.group}</p><ul>{g.items.map((i) => <li>{i}</li>)}</ul></div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="sec" id="projects" data-co="projects">
+    <div class="sec-in">
+      <p class="label reveal">Projects</p>
+      <h2 class="h2 reveal">Things I've <em>built</em></h2>
+      <p class="lead reveal">Each project is labelled by what it actually is: a product, an experiment or a concept.</p>
+      <div class="stack">
+        {projects.map((p, i) => (
+          <a class="pcard" style={`--i:${i}`} href={`${base}/projects/${p.id}/`}>
+            <div class="pcard-l">
+              <div>
+                <span class="num" aria-hidden="true">{pad2(i + 1)}</span>
+                <h3 style="margin-top:14px">{p.data.title}</h3>
+              </div>
+              <p class="sum">{p.data.summary}</p>
+              <div class="row">
+                <span class="tag hot">{p.data.status}</span>
+                <span class="tag">{p.data.category}</span>
+                <span class="go">Case study →</span>
+              </div>
+            </div>
+            <div class="pcard-r" aria-hidden="true"><b>{pad2(i + 1)}</b></div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- VENTURES -->
+  <section class="sec left" id="ventures" data-co="ventures">
+    <div class="sec-in">
+      <p class="label reveal">Ventures</p>
+      <h2 class="h2 reveal">Beyond Code – <em>Building Businesses</em></h2>
+      <p class="lead reveal"><b style="color:var(--color-ink)">{venture.name}</b>. {venture.blurb}</p>
+      <div class="ventures reveal">
+        {projects.map((p, i) => (
+          <a class="vrow" href={`${base}/projects/${p.id}/`}>
+            <span class="n">{pad2(i + 1)}</span>
+            <div><h3>{p.data.title}</h3><small>{p.data.category}</small></div>
+            <span class="tag">{p.data.status}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CREATOR -->
+  <section class="sec right" id="creator" data-co="creator">
+    <div class="sec-in">
+      <p class="label reveal">Beyond Code</p>
+      <h2 class="h2 reveal">Creator & <em>community</em></h2>
+      <p class="lead reveal">{creator.blurb}</p>
+      <ul class="topics reveal">{creator.topics.map((t) => <li>{t}</li>)}</ul>
+      <ul class="socials reveal" style="margin-top:28px">
+        {socials.filter((s) => s.icon === 'instagram').map((s) => (
+          <li><a class="ig" href={s.href} target="_blank" rel="noopener"><SocialIcon name="instagram" size={16} /> {s.label.replace('Instagram · ', '')}</a></li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- ACHIEVEMENTS -->
+  <section class="sec left" id="achievements" data-co="achievements">
+    <div class="sec-in">
+      <p class="label reveal">Education & achievements</p>
+      <h2 class="h2 reveal">{education.achievement}</h2>
+      <p class="lead reveal">{education.degree}, {education.institution} ({education.years})</p>
+      <ul class="trio">
+        {education.leadership.map((l) => (
+          <li class="reveal"><p class="label">Leadership</p><h3>{l.role}</h3><p>{l.org}</p></li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="sec contact" id="contact" data-co="contact">
+    <div class="sec-in" style="width:100%">
+      <p class="label reveal">Contact</p>
+      <h2 class="reveal">Let's build<br />something <em style="font-style:normal;color:var(--color-accent)">together.</em></h2>
+      <a class="mail reveal" href={`mailto:${site.email}`}>{site.email}</a>
+      <ul class="socials reveal">
+        {socials.map((s) => (
+          <li><a class="ig" href={s.href} target="_blank" rel="noopener"><SocialIcon name={s.icon} size={16} /> {s.label}</a></li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- Guide chat -->
+  <button class="chat-fab" id="chat-fab" type="button" aria-expanded="false" aria-controls="chat"><i></i> Ask about Bose</button>
+  <div class="chat" id="chat" hidden role="dialog" aria-label="Portfolio guide chat">
+    <div class="chat-head"><div><b>Portfolio guide</b><small>Auto-replies from this site's content</small></div><button id="chat-x" type="button" aria-label="Close chat" style="color:var(--color-muted)">✕</button></div>
     <div class="chat-body" id="chat-body"></div>
     <div class="chat-chips" id="chat-chips">{chatChips.map((c) => <button type="button" data-q={c}>{c}</button>)}</div>
     <form class="chat-form" id="chat-form"><input id="chat-in" placeholder="Ask about Bose…" autocomplete="off" aria-label="Your question" /><button type="submit">Send</button></form>
   </div>
 
-  <script type="application/json" id="game-data" set:html={JSON.stringify({ levels, answers, email: site.email, skillCount })}></script>
+  <script type="application/json" id="site-data" set:html={JSON.stringify({ answers, email: site.email, messages: companion })}></script>
+  <script is:inline>setTimeout(function(){var p=document.getElementById('preloader');if(p){p.classList.add('done');document.body.classList.remove('loading');document.body.classList.add('cinema-open');}},9000)</script>
   <script>
     import '../scripts/preloader';
-    import '../scripts/world';
-    import '../scripts/game';
+    import '../scripts/companion';
     import '../scripts/chat';
   </script>
 </Base>

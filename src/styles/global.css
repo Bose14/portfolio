@@ -1,16 +1,17 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/space-grotesk';
+@import '@fontsource/bebas-neue';
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/jetbrains-mono';
 
 @theme {
-  --color-bg: #090b0f;
-  --color-surface: #11151c;
-  --color-line: #252b35;
-  --color-ink: #e9edf5;
-  --color-muted: #9aa3b2;
-  --color-accent: #8b9dff;
-  --font-display: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --color-bg: #07070a;
+  --color-surface: #0f0f14;
+  --color-line: #24242d;
+  --color-ink: #f4f1ec;
+  --color-muted: #a8a3ad;
+  --color-accent: #ee4b62;
+  --color-accent-soft: #f6a0ae;
+  --font-display: 'Bebas Neue', Impact, ui-sans-serif, sans-serif;
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 }
@@ -28,7 +29,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
+h1, h2 { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; letter-spacing: .01em; font-synthesis: none; line-height: .95; }
+h3 { font-family: var(--font-sans); letter-spacing: -0.01em; }
 
 :focus-visible {
   outline: 2px solid var(--color-accent);
@@ -37,9 +39,10 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
 }
 
 .label {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.34em;
   text-transform: uppercase;
   color: var(--color-accent);
 }
@@ -53,7 +56,7 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
 }
 
 /* Markdown content in case studies */
-.prose-case h2 { font-size: 1.5rem; margin: 2.5rem 0 0.75rem; font-weight: 600; }
+.prose-case h2 { font-size: 2rem; margin: 2.5rem 0 0.75rem; }
 .prose-case p { color: var(--color-muted); line-height: 1.75; margin: 0.75rem 0; }
 .prose-case ul { margin: 0.75rem 0; padding-left: 1.25rem; list-style: disc; color: var(--color-muted); }
 .prose-case li { margin: 0.35rem 0; line-height: 1.7; }

@@ -5,7 +5,7 @@ const box = document.getElementById('chat');
 const body = document.getElementById('chat-body');
 const form = document.getElementById('chat-form') as HTMLFormElement | null;
 const input = document.getElementById('chat-in') as HTMLInputElement | null;
-const dataEl = document.getElementById('game-data');
+const dataEl = document.getElementById('site-data');
 
 if (fab && box && body && form && input && dataEl) {
   const { answers, email } = JSON.parse(dataEl.textContent || '{}') as { answers: Record<string, string>; email: string };
@@ -53,7 +53,7 @@ if (fab && box && body && form && input && dataEl) {
     fab.setAttribute('aria-expanded', String(v));
     if (v && !greeted) {
       greeted = true;
-      botSay("Hi, I'm Bo! Ask me anything about Bose, or tap a chip below.");
+      botSay("Hi! Ask me anything about Bose, or tap a chip below.");
     }
     if (v) input.focus({ preventScroll: true });
   }

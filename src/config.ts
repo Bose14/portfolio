@@ -91,91 +91,20 @@ export const creator = {
   ],
 };
 
-// Assistant ("Bo") — the illustrated guide that moves around the page.
-export const assistant = {
-  name: 'Bo',
-  // Set to e.g. '/images/assistant.svg' to use your own illustration instead of the built-in one.
-  avatarSrc: '',
-  // side: which edge Bo stands on. level: 0 = bottom, 1 = middle, 2 = upper.
-  stops: {
-    hero: {
-      side: 'right',
-      level: 0,
-      text: "Hi, I'm Bo, Bose's assistant. I'll walk you around this portfolio. Scroll down and I'll tell you what each part is about.",
-    },
-    intro: {
-      side: 'left',
-      level: 1,
-      text: "Bose is an engineer who learns by building. This is the short version of his story, from college communities to the software industry.",
-    },
-    projects: {
-      side: 'right',
-      level: 1,
-      text: 'These are Bose\'s featured projects. Each one is labelled as a product, experiment or concept, so you know what is real and what is still an idea. Open one for the case study.',
-    },
-    experience: {
-      side: 'left',
-      level: 0,
-      text: 'Bose works at Juspay as a Product Engineer, after joining as an intern and getting a PPO. His work is backend and payments, with eNACH integrations.',
-    },
-    skills: {
-      side: 'right',
-      level: 2,
-      text: 'No percentage bars here. These are the tools Bose uses and can explain. The last group is what he is currently exploring.',
-    },
-    ventures: {
-      side: 'left',
-      level: 1,
-      text: 'Outside his job, Bose builds products under Azhizen Solutions. Each venture shows its current status honestly.',
-    },
-    achievements: {
-      side: 'right',
-      level: 0,
-      text: 'Bose was Best Outgoing Student in 2025 and led three student communities along the way.',
-    },
-    creator: {
-      side: 'left',
-      level: 2,
-      text: 'Bose also creates content about software careers, interview prep and learning. That is the creator side of him.',
-    },
-    contact: {
-      side: 'right',
-      level: 1,
-      text: "That's the tour. If something caught your eye, email Bose or find him on the links below. He would like to hear from you.",
-    },
-  },
-  pages: {
-    about: 'This is the longer version of the story. I am still here if you need me.',
-    projects: 'Every project, in one place. Pick one to read its case study.',
-    project: 'This is a case study. Sections only appear once there is real information to show.',
-    notfound: 'Oops, this page does not exist. Let me take you home.',
-  },
+// What the moving figure says as you scroll. First person, because it is Bose's own site.
+export const companion = {
+  home: "Hi, I'm Bose. Stay a while. I'll walk you through my work as you scroll.",
+  about: 'A bit about how I got here: from leading college communities to building payment systems.',
+  experience: 'By day I work on backend and payments at Juspay, from intern to PPO to full-time.',
+  skills: "These are tools I use and can explain. No made-up percentage bars.",
+  projects: "Here's what I've built and explored. Each is labelled honestly: product, experiment or concept.",
+  ventures: 'Outside work I build products under Azhizen Solutions.',
+  creator: 'I also create content about software careers, interview prep and learning.',
+  achievements: 'Education, and the communities I had the chance to lead.',
+  contact: "That's the tour. If something caught your eye, let's talk.",
 } as const;
 
-export type StopKey = keyof typeof assistant.stops;
+export const photo = '/images/bose.webp';
 
-// ---- Game world ----------------------------------------------------------
-// One entry per level in the side-scrolling world. `say` is what Bo says on arrival.
-export const levels = [
-  { id: 'home', nav: 'Home', kicker: 'Prologue', title: 'Boot sequence',
-    say: "Hi, I'm Bo, Bose's guide. Scroll, swipe, or press → and I'll run you through his world. Grab the coins, squash the bugs." },
-  { id: 'about', nav: 'About', kicker: 'Level 1', title: 'Origin story',
-    say: 'Every engineer has an origin story. His started with college communities and a habit of learning by building.' },
-  { id: 'experience', nav: 'Experience', kicker: 'Level 2', title: 'Juspay',
-    say: 'Now the day job: backend and payments at Juspay, from intern to PPO to full-time Product Engineer.' },
-  { id: 'skills', nav: 'Skills', kicker: 'Side quest', title: 'Collect the stack',
-    say: 'Run through the tokens to unlock them. No fake percentage bars here, only tools Bose can actually explain.' },
-  { id: 'projects', nav: 'Projects', kicker: 'Level 3', title: 'Portals',
-    say: 'Each portal leads to a project case study. Every one is labelled honestly: product, experiment or concept.' },
-  { id: 'ventures', nav: 'Ventures', kicker: 'Level 4', title: 'Building businesses',
-    say: 'Outside work, Bose builds under Azhizen Solutions. Take a look down the street.' },
-  { id: 'creator', nav: 'Beyond Code', kicker: 'Level 5', title: 'Creator mode',
-    say: 'Bose also makes content about software careers and learning. This is his creator side.' },
-  { id: 'contact', nav: 'Contact', kicker: 'Final level', title: 'Say hello',
-    say: "You made it to the finish line! Email Bose, or try the bonus level below. Can you beat the bugs?" },
-] as const;
-
-export type LevelId = (typeof levels)[number]['id'];
-
-// Answers for the "Ask Bo" chat. Rule-based, no backend, so nothing here is guessed.
+// Quick questions for the on-page guide chat. Answers are built from the data above.
 export const chatChips = ['Who is Bose?', 'Experience', 'Skills', 'Projects', 'Education', 'Ventures', 'Contact'] as const;
