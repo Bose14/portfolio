@@ -7,13 +7,13 @@ type Data = { messages: Record<string, string> };
 
 const D: Record<string, Stop> = {
   home:         { x: 0.74, y: 0.53, s: 1.0,  r: 0 },
-  about:        { x: 0.12, y: 0.62, s: 0.36, r: -7 },
-  experience:   { x: 0.89, y: 0.40, s: 0.34, r: 8 },
+  about:        { x: 0.14, y: 0.62, s: .56, r: -7 },
+  experience:   { x: 0.86, y: 0.40, s: .56, r: 8 },
   skills:       { x: 0.9,  y: 0.27, s: 0.26, r: -9 },
-  projects:     { x: 0.945, y: 0.6, s: 0.24, r: 6 },
-  ventures:     { x: 0.11, y: 0.36, s: 0.34, r: -6 },
-  creator:      { x: 0.88, y: 0.66, s: 0.36, r: 8 },
-  achievements: { x: 0.12, y: 0.60, s: 0.34, r: -8 },
+  projects:     { x: 0.945, y: 0.6, s: .36, r: 6 },
+  ventures:     { x: 0.14, y: 0.36, s: .56, r: -6 },
+  creator:      { x: 0.86, y: 0.66, s: .56, r: 8 },
+  achievements: { x: 0.14, y: 0.60, s: .56, r: -8 },
   contact:      { x: 0.84, y: 0.54, s: 0.8, r: 0 },
 };
 const M: Record<string, Stop> = {
