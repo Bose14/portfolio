@@ -233,6 +233,17 @@ const answers: Record<string, string> = {
   </section>
 
   <!-- Guide chat -->
+  <div class="buddy" id="buddy" data-action="idle">
+    <canvas id="buddy-cv" aria-label="Animated 3D character of Bose. Click to make it jump, dance, wave or run."></canvas>
+    <div class="buddy-ui">
+      <button type="button" data-act="run">Run</button>
+      <button type="button" data-act="jump">Jump</button>
+      <button type="button" data-act="dance">Dance</button>
+      <button type="button" data-act="wave">Wave</button>
+      <button type="button" id="buddy-x" aria-label="Hide character">×</button>
+    </div>
+  </div>
+
   <button class="chat-fab" id="chat-fab" type="button" aria-expanded="false" aria-controls="chat"><i></i> Ask about Bose</button>
   <div class="chat" id="chat" hidden role="dialog" aria-label="Portfolio guide chat">
     <div class="chat-head"><div><b>Portfolio guide</b><small>Auto-replies from this site's content</small></div><button id="chat-x" type="button" aria-label="Close chat" style="color:var(--color-muted)">✕</button></div>
@@ -247,5 +258,6 @@ const answers: Record<string, string> = {
     import '../scripts/preloader';
     import '../scripts/companion';
     import '../scripts/chat';
+    import '../scripts/buddy';
   </script>
 </Base>
