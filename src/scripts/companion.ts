@@ -56,6 +56,7 @@ function init(data: Data, figure: HTMLElement) {
   function measure() {
     vw = innerWidth; vh = innerHeight;
     figH = figure.offsetHeight; figW = figure.offsetWidth;
+    if (mobile()) fitHome();
     const max = Math.max(0, document.documentElement.scrollHeight - vh);
     const list = Array.from(document.querySelectorAll<HTMLElement>('[data-co]'));
     keys = list.map((el, i) => {
@@ -68,7 +69,16 @@ function init(data: Data, figure: HTMLElement) {
     for (let i = 1; i < keys.length; i++) if (keys[i].y <= keys[i - 1].y + 1) keys[i].y = keys[i - 1].y + 1;
   }
 
-  const stopOf = (id: string): Stop => (mobile() ? M : D)[id] ?? D.home;
+  // phone hero: portrait sits fully below the sticky header, sized to the screen
+  let homeM: Stop = M.home;
+  function fitHome() {
+    const hdr = (document.querySelector('header') as HTMLElement | null)?.offsetHeight ?? 60;
+    const sc = clamp((vh * 0.46 - hdr - 10) / figH, 0.3, 0.6);
+    const hh = figH * sc;
+    homeM = { x: 0.5, y: (hdr + 8 + hh / 2) / vh, s: sc, r: 0 };
+    document.documentElement.style.setProperty('--hero-pad', `${Math.round(hdr + 8 + hh + 14)}px`);
+  }
+  const stopOf = (id: string): Stop => (mobile() ? (id === 'home' ? homeM : M[id] ?? homeM) : D[id] ?? D.home);
   const px = (st: Stop) => ({ x: st.x * vw, y: st.y * vh, s: st.s, r: st.r });
 
   function targetAt(y: number) {

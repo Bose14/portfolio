@@ -110,7 +110,7 @@ body.cinema-open .chip { opacity: 1; transition-delay: 2s; }
 }
 @media (max-width: 768px) {
   .sec { padding: 64px var(--pad); }
-  .hero { padding-top: 46vh; padding-bottom: 56px; min-height: auto; }
+  .hero { padding-top: var(--hero-pad, 46vh); padding-bottom: 56px; min-height: auto; }
   .h2, .sec h2 { font-size: clamp(40px, 12.5vw, 64px); }
   .contact h2 { font-size: clamp(44px, 14vw, 72px); }
   .fig-ring2 { display: none; }
