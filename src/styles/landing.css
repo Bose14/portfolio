@@ -108,6 +108,15 @@ body.cinema-open .chip { opacity: 1; transition-delay: 2s; }
   .hero-sub { letter-spacing: .32em; }
   .scroll-hint { display: none; }
 }
+@media (max-width: 768px) {
+  .sec { padding: 64px var(--pad); }
+  .hero { padding-top: 46vh; padding-bottom: 56px; min-height: auto; }
+  .h2, .sec h2 { font-size: clamp(40px, 12.5vw, 64px); }
+  .contact h2 { font-size: clamp(44px, 14vw, 72px); }
+  .fig-ring2 { display: none; }
+  .fig-body { filter: drop-shadow(0 0 10px rgba(238,75,98,.3)) drop-shadow(0 8px 14px rgba(0,0,0,.6)); }
+  .bubble { font-size: 12.5px; padding: 11px 13px; }
+}
 
 /* ===== generic sections ===== */
 .sec { position: relative; z-index: 2; padding: clamp(80px, 14vh, 160px) var(--pad); }

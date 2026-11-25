@@ -17,15 +17,15 @@ const D: Record<string, Stop> = {
   contact:      { x: 0.84, y: 0.54, s: 0.8, r: 0 },
 };
 const M: Record<string, Stop> = {
-  home:         { x: 0.5,  y: 0.27, s: 0.62, r: 0 },
-  about:        { x: 0.13, y: 0.86, s: 0.2,  r: -6 },
-  experience:   { x: 0.13, y: 0.86, s: 0.2,  r: 6 },
-  skills:       { x: 0.13, y: 0.86, s: 0.2,  r: -6 },
-  projects:     { x: 0.13, y: 0.86, s: 0.2,  r: 6 },
-  ventures:     { x: 0.13, y: 0.86, s: 0.2,  r: -6 },
-  creator:      { x: 0.13, y: 0.86, s: 0.2,  r: 6 },
-  achievements: { x: 0.13, y: 0.86, s: 0.2,  r: -6 },
-  contact:      { x: 0.5,  y: 0.4,  s: 0.5,  r: 0 },
+  home:         { x: 0.5,  y: 0.3, s: 0.58,  r: 0 },
+  about:        { x: 0.13, y: 0.9, s: 0.2, r: -5 },
+  experience:   { x: 0.13, y: 0.9, s: 0.2, r: 5 },
+  skills:       { x: 0.13, y: 0.9, s: 0.2, r: -5 },
+  projects:     { x: 0.13, y: 0.9, s: 0.2, r: 5 },
+  ventures:     { x: 0.13, y: 0.9, s: 0.2, r: -5 },
+  creator:      { x: 0.13, y: 0.9, s: 0.2, r: 5 },
+  achievements: { x: 0.13, y: 0.9, s: 0.2, r: -5 },
+  contact:      { x: 0.13, y: 0.9, s: 0.2, r: 0 },
 };
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -215,12 +215,13 @@ function init(data: Data, figure: HTMLElement) {
 
     // bubble follows the figure and sits on the side facing the page centre
     if (bubble.classList.contains('show')) {
+      if (mobile()) bubble.style.width = `${vw - 24}px`; else bubble.style.width = '';
       const bw = bubble.offsetWidth, bh = bubble.offsetHeight;
       const hw = (figW * st.s) / 2, hh = (figH * st.s) / 2;
       let bx: number, by: number;
       if (mobile()) {
-        bx = clamp(st.x - 30, 12, vw - bw - 12);
-        by = clamp(st.y - hh - bh - 6, 70, vh - bh - 12);
+        bx = 12;
+        by = vh - bh - 78;
       } else if (st.x < vw / 2) {
         bx = st.x + hw * 0.75 + 14;
         by = clamp(st.y - hh * 0.55 - bh * 0.5, 76, vh - bh - 16);
