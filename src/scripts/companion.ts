@@ -32,6 +32,9 @@ const $ = (id: string) => document.getElementById(id)!;
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 const smoother = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
 
+// The figure travelling between sections is parked for now: it stays in the landing hero and scrolls away with it.
+const TRAVEL = false;
+
 const dataEl = document.getElementById('site-data');
 const figure = document.getElementById('figure');
 if (dataEl && figure) init(JSON.parse(dataEl.textContent || '{}') as Data, figure);
@@ -160,7 +163,15 @@ function init(data: Data, figure: HTMLElement) {
     const dt = Math.min(0.12, (now - last) / 1000) || 0.016;
     last = now; time += dt;
 
-    const target = targetAt(scrollY);
+    const target = TRAVEL ? targetAt(scrollY) : (() => { const h = px(stopOf('home')); return { ...h, y: h.y - scrollY }; })();
+    if (!TRAVEL) {
+      st.y = target.y; vel.y = 0;
+      const o = clamp(1 - scrollY / (vh * 0.85), 0, 1);
+      figure.style.opacity = scrollY > 2 ? o.toFixed(3) : '';
+      figure.style.transition = scrollY > 2 ? 'opacity .1s linear' : '';
+      hit.style.pointerEvents = o < 0.2 ? 'none' : '';
+      if (o < 0.2 && bubble.classList.contains('show')) bubble.classList.remove('show');
+    }
     if (!started) {
       // arrive from the side on first frame, then spring into place
       st.x = target.x + vw * 0.07; st.y = target.y + vh * 0.02; st.s = target.s * 0.96; st.r = target.r + 3;
@@ -217,7 +228,7 @@ function init(data: Data, figure: HTMLElement) {
     activeId = keys[ai]?.id ?? 'home';
     const settled = Math.hypot(target.x - st.x, target.y - st.y) < 30 && speed < 70;
     settledFor = settled ? settledFor + dt : 0;
-    if (settledFor > 0.45 && ai !== shownIdx && started) {
+    if (TRAVEL && settledFor > 0.45 && ai !== shownIdx && started) {
       shownIdx = ai;
       const msg = data.messages[activeId];
       if (msg) say(msg);
