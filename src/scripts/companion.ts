@@ -46,6 +46,21 @@ function init(data: Data, figure: HTMLElement) {
   const hit = $('fig-hit'), bubble = $('bubble'), bubbleT = $('bubble-t');
   const mobile = () => matchMedia('(max-width: 768px)').matches;
 
+  // side-rail progress lines (work even with reduced motion)
+  const rails = Array.from(document.querySelectorAll<HTMLElement>('.rail'));
+  const railSecs = rails.map((r) => r.closest('section') as HTMLElement);
+  function updateRails() {
+    const vh2 = innerHeight;
+    railSecs.forEach((sec, i) => {
+      const r = sec.getBoundingClientRect();
+      const p = clamp((vh2 * 0.55 - r.top) / Math.max(1, r.height - vh2 * 0.1), 0, 1);
+      rails[i].style.setProperty('--p', p.toFixed(3));
+    });
+  }
+  addEventListener('scroll', updateRails, { passive: true });
+  addEventListener('resize', updateRails);
+  updateRails();
+
   // hero buttons / page furniture
   $('hero-info')?.addEventListener('click', () => $('chat-fab')?.click());
   const spot = $('spot');
