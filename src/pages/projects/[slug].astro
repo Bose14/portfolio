@@ -10,13 +10,16 @@ export async function getStaticPaths() {
 }
 
 const { project } = Astro.props;
+const all = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const idx = all.findIndex((x) => x.id === project.id);
+const next = all[(idx + 1) % all.length];
 const { Content } = await render(project);
 const d = project.data;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <Base title={`${d.title} — ${site.name}`} description={d.summary} page="project">
-  <article class="mx-auto max-w-3xl px-5 pb-24 pt-14">
+  <article class="mx-auto max-w-5xl px-5 pb-24 pt-14">
     <a href={`${base}/projects/`} class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink">
       <ArrowLeft size={16} aria-hidden="true" /> All projects
     </a>
@@ -24,8 +27,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <span class="label">{d.category}</span>
       <span class="rounded-full border border-line px-3 py-1 font-mono text-xs text-muted">{d.status}</span>
     </div>
-    <h1 class="mt-4 text-4xl font-semibold sm:text-6xl">{d.title}</h1>
-    <p class="mt-4 text-lg text-muted">{d.summary}</p>
+    <div class="mt-4 flex items-end gap-5">
+      <span class="font-display text-7xl leading-none text-accent/40 sm:text-9xl" aria-hidden="true">{String(idx + 1).padStart(2, '0')}</span>
+      <h1 class="text-4xl font-semibold sm:text-6xl">{d.title}</h1>
+    </div>
+    <p class="mt-4 max-w-2xl text-lg text-muted">{d.summary}</p>
 
     {d.stack.length > 0 && (
       <ul class="mt-6 flex flex-wrap gap-2">
@@ -39,7 +45,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       </p>
     )}
 
-    <div class="prose-case mt-6"><Content /></div>
+    <div class="prose-case mt-6 max-w-3xl"><Content /></div>
 
     {d.links.length > 0 && (
       <ul class="mt-10 flex flex-wrap gap-3">
@@ -48,5 +54,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
         ))}
       </ul>
     )}
+
+    <a href={`${base}/projects/${next.id}/`} class="group mt-16 flex items-center justify-between gap-6 rounded-2xl border border-line bg-surface p-6 transition hover:border-accent/60">
+      <span>
+        <span class="label">Next project</span>
+        <span class="mt-2 block font-display text-3xl sm:text-4xl">{next.data.title}</span>
+        <span class="mt-1 block text-sm text-muted">{next.data.category} · {next.data.status}</span>
+      </span>
+      <span class="text-2xl text-accent transition group-hover:translate-x-1" aria-hidden="true">→</span>
+    </a>
   </article>
 </Base>
