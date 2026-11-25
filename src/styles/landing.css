@@ -258,9 +258,10 @@ body.cinema-open .chip { opacity: 1; transition-delay: 2s; }
 .buddy-fx { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 54; pointer-events: none; }
 .buddy[data-side='r'] { left: max(calc(100vw - var(--bw) - 90px), 58vw); }
 #buddy-cv { width: var(--bw); height: calc(var(--bw) * 1.165); pointer-events: auto; cursor: pointer; display: block; }
-.buddy-ui { display: flex; gap: 6px; pointer-events: auto; margin-top: -6px; padding: 5px; border-radius: 999px; background: rgba(15,15,20,.78); border: 1px solid var(--color-line); backdrop-filter: blur(8px); }
-.buddy-ui button { font: 600 11px/1 var(--font-sans); letter-spacing: .04em; color: var(--color-muted); background: transparent; border: 0; padding: 7px 10px; border-radius: 999px; cursor: pointer; transition: .2s; }
-.buddy-ui button:hover, .buddy-ui button.on { color: #fff; background: rgba(238,75,98,.85); }
+.buddy-ui { position: absolute; top: 8px; right: 6px; pointer-events: auto; opacity: 0; transition: opacity .25s; }
+.buddy:hover .buddy-ui { opacity: .85; }
+.buddy-ui button { width: 24px; height: 24px; border-radius: 50%; font: 600 13px/1 var(--font-sans); color: #fff; background: rgba(15,15,20,.7); border: 1px solid var(--color-line); cursor: pointer; }
+.buddy-ui button:hover { background: rgba(238,75,98,.9); }
 @media (min-width: 1100px) { .buddy { --bw: 380px; } }
 @media (min-width: 1500px) { .buddy { --bw: 430px; } }
 @media (max-width: 768px) {

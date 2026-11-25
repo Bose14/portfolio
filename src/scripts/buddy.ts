@@ -1,5 +1,5 @@
-// A small 3D character of Bose (built from primitives, toon-shaded with ink outlines) that can
-// idle, run, jump, dance and wave. It reacts to scrolling, section changes and clicks.
+// 3D character (free Mixamo-rigged sample model) with hand-posed moves: jump, backflip, superhero
+// landing, squat, sit, spider crouch, stretch, look-around, dance and a web swing between sections.
 import type * as T from 'three';
 
 const wrap = document.getElementById('buddy');
@@ -13,7 +13,7 @@ async function boot(wrap: HTMLElement, canvas: HTMLCanvasElement) {
   else document.addEventListener('intro:start', () => setTimeout(start, 600), { once: true });
 }
 
-type Action = 'idle' | 'run' | 'jump' | 'dance' | 'wave' | 'swing' | 'land';
+type Action = 'idle' | 'run' | 'jump' | 'dance' | 'wave' | 'swing' | 'land' | 'flip' | 'hero' | 'squat' | 'sit' | 'spider' | 'stretch' | 'look';
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
 async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
@@ -66,7 +66,9 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
   model.updateMatrixWorld(true);
   const restW: Record<string, T.Quaternion> = {}, restL: Record<string, T.Quaternion> = {};
   const hipsRestPos = bone.Hips.position.clone();
-  const hipsUnit = bone.Hips.parent!.getWorldScale(new THREE.Vector3()).y || 1;
+  const hipsInv = bone.Hips.parent!.matrixWorld.clone().invert();
+  const hipsWorld0 = bone.Hips.getWorldPosition(new THREE.Vector3());
+  const hipsTmp = new THREE.Vector3();
   Object.keys(bone).forEach((n) => { restW[n] = bone[n].getWorldQuaternion(new THREE.Quaternion()); restL[n] = bone[n].quaternion.clone(); });
   const parentOf = (n: string) => Object.keys(bone).find((k) => bone[k] === bone[n].parent) ?? '';
   const identity = new THREE.Quaternion();
@@ -91,7 +93,7 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
   ring.rotation.x = -Math.PI / 2; ring.position.y = 0.012; root.add(ring);
 
   // ---------- pose system ----------
-  const J = ['rootY','rootRy','bodyY','torsoX','torsoY','torsoZ','headX','headY','headZ','thL','thR','knL','knR','shLx','shRx','shLz','shRz','elL','elR','fiL','fiR','rootRz'] as const;
+  const J = ['rootY','rootRy','bodyY','torsoX','torsoY','torsoZ','headX','headY','headZ','thL','thR','knL','knR','shLx','shRx','shLz','shRz','elL','elR','fiL','fiR','rootRz','rootRx'] as const;
   type Pose = Record<(typeof J)[number], number>;
   const zero = (): Pose => Object.fromEntries(J.map((k) => [k, 0])) as Pose;
   const cur = zero();
@@ -132,6 +134,38 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
     } else if (a === 'land') {
       const q = clamp(t / 0.38, 0, 1), cr = Math.sin(Math.PI * Math.min(1, q * 1.1));
       p.bodyY = -0.34 * cr; p.thL = -1.0 * cr; p.thR = -1.0 * cr; p.knL = 1.7 * cr; p.knR = 1.7 * cr; p.torsoX = 0.35 * cr; p.shLx = 0.7 * cr; p.shRx = 0.7 * cr;
+    } else if (a === 'flip') {
+      const P = clamp(t / 1.05, 0, 1), u = clamp((P - 0.2) / 0.64, 0, 1), inAir = P > 0.2 && P < 0.84;
+      const cr = P < 0.2 ? P / 0.2 : P > 0.84 ? 1 - (P - 0.84) / 0.16 : 0;
+      const tuck = inAir ? clamp(s(Math.PI * u) * 1.7, 0, 1) : 0, e = u * u * (3 - 2 * u);
+      p.bodyY = -0.34 * cr; p.rootY = inAir ? 0.8 * 4 * u * (1 - u) : 0; p.rootRx = inAir ? -Math.PI * 2 * e : 0;
+      p.thL = p.thR = -1.0 * cr - 1.7 * tuck; p.knL = p.knR = 1.7 * cr + 2.3 * tuck; p.torsoX = 0.35 * cr + 0.5 * tuck;
+      p.shLx = p.shRx = -0.9 * tuck + 0.6 * cr; p.elL = p.elR = -1.5 * tuck; p.headX = 0.3 * tuck;
+      if (inAir && u < 0.3) { p.shLz = p.shRz = 0; p.shLx = p.shRx = -2.2 * (1 - u / 0.3) * (1 - tuck); }
+    } else if (a === 'hero') { // superhero landing: one knee down, one fist on the ground
+      const k = clamp(t / 0.16, 0, 1), br = s(t * 1.6) * 0.012;
+      p.rootRy = 0.95; p.bodyY = -0.52 * k + br; p.torsoX = 0.95 * k; p.headX = -1.15 * k; p.thL = -1.4 * k; p.knL = 1.95 * k; p.thR = 0.3 * k; p.knR = 2.5 * k;
+      p.shRx = 0.5 * k; p.elR = -0.1; p.shRz = -0.12; p.shLx = 1.5 * k; p.shLz = 0.9 * k; p.elL = -0.25; p.fiL = 0.2;
+    } else if (a === 'squat') {
+      const k = clamp(t / 0.5, 0, 1);
+      p.rootRy = 0.7 * k; p.bodyY = -0.6 * k; p.thL = p.thR = -1.45 * k; p.knL = p.knR = 2.45 * k; p.torsoX = 0.3 * k; p.headX = -0.15 * k + s(t * 1.3) * 0.05;
+      p.shLx = p.shRx = -1.25 * k; p.elL = p.elR = -0.35 * k; p.shLz = 0.12; p.shRz = -0.12;
+    } else if (a === 'sit') { // sitting on the ground, one knee up, leaning back on a hand
+      const k = clamp(t / 0.6, 0, 1);
+      p.rootRy = 1.05 * k; p.bodyY = -0.8 * k; p.thL = -1.75 * k; p.knL = 1.15 * k; p.thR = -1.5 * k; p.knR = 0.2 * k; p.torsoX = -0.18 * k; p.headX = -0.1 + s(t * 0.9) * 0.05;
+      p.headY = s(t * 0.6) * 0.3; p.shLx = -0.5 * k; p.elL = -0.9 * k; p.shLz = 0.3; p.shRx = 0.85 * k; p.elR = -0.1; p.shRz = -0.35 * k;
+    } else if (a === 'spider') { // spider-man style crouch, palms down, head up
+      const k = clamp(t / 0.4, 0, 1), sway = s(t * 1.8) * 0.04;
+      p.rootRy = 1.15 * k; p.bodyY = -0.58 * k; p.thL = p.thR = -1.4 * k; p.knL = p.knR = 2.35 * k; p.torsoX = (1.0 + sway) * k; p.headX = -1.35 * k;
+      p.shLx = p.shRx = -0.15 * k; p.elL = p.elR = -0.1; p.shLz = 0.3 * k; p.shRz = -0.3 * k;
+    } else if (a === 'stretch') {
+      const k = clamp(t / 0.5, 0, 1), sw2 = s(t * 2.2) * 0.12;
+      p.shLz = 0.1 + 2.85 * k; p.shRz = -0.1 - 2.85 * k; p.elL = p.elR = -0.2 * k; p.torsoX = -0.2 * k; p.torsoZ = sw2 * k; p.headX = -0.3 * k; p.rootRy = 0.1 * k;
+      p.thL = p.thR = 0.05 * k;
+    } else if (a === 'look') { // scanning the room, left to right
+      const k = clamp(t / 0.4, 0, 1);
+      p.shLz = 0.35 * k; p.shRz = -0.35 * k; p.elL = p.elR = -0.5 * k; p.torsoY = s(t * 1.5) * 0.3 * k; p.headY = s(t * 1.5) * 0.7 * k; p.headX = 0.05;
+      p.rootRy = s(t * 1.5) * 0.35 * k;
     } else if (a === 'dance') {
       const b = t * Math.PI * 2 * 2.2, S = s(b), HB = s(b / 2);
       const move = Math.floor(t / 1.82) % 3;
@@ -152,25 +186,43 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
     return p;
   }
 
-  function play(a: Action, dur = 0) {
-    action = a; actionT = 0; until = dur ? performance.now() + dur : 0;
-    if (a === 'jump') { setTimeout(() => { const f = feet(); puff(f.x, f.y, 0.6, 8); }, 210); setTimeout(() => { const f = feet(); puff(f.x, f.y, 1, 16); }, 900); }
+  const HOLD: Partial<Record<Action, number>> = { jump: 1050, flip: 1100, hero: 1500, squat: 2600, sit: 4200, spider: 3000, stretch: 2400, look: 3200, dance: 9000 };
+  let nextA: Action | '' = '', idleAt = performance.now() + 2800;
+  function play(a: Action, dur = 0, then: Action | '' = '') {
+    action = a; actionT = 0; nextA = then;
+    until = (dur || HOLD[a] || 0) ? performance.now() + (dur || HOLD[a] || 0) : 0;
+    idleAt = performance.now() + 3200 + Math.random() * 3200;
+    if (a === 'jump' || a === 'flip') {
+      setTimeout(() => { const f = feet(); puff(f.x, f.y, 0.6, 8); }, 210);
+      if (!then) setTimeout(() => { const f = feet(); puff(f.x, f.y, 1, 16); }, 900);
+    }
+    if (a === 'hero') { const f = feet(); puff(f.x, f.y, 1.4, 22); shock(f.x, f.y); }
     wrap.dataset.action = a;
-    wrap.querySelectorAll('[data-act]').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.act === a && (a === 'dance' || a === 'run')));
+  }
+  // a shuffled bag of "arrival" moves so each section feels different
+  let bag: string[] = [];
+  function arrive() {
+    if (!bag.length) bag = ['hero', 'flip', 'jump', 'hero', 'flip'].sort(() => Math.random() - 0.5);
+    const m = bag.pop()!;
+    if (m === 'hero') play('jump', 1050, 'hero'); else play(m as Action);
+  }
+  const idleMoves: Action[] = ['squat', 'sit', 'spider', 'stretch', 'look', 'flip', 'hero'];
+  let lastIdle = '';
+  function idleDirector(now: number) {
+    if (action !== 'idle' || sw || now < idleAt || wrap.classList.contains('away')) return;
+    let m = idleMoves[Math.floor(Math.random() * idleMoves.length)];
+    if (m === lastIdle) m = idleMoves[(idleMoves.indexOf(m) + 1) % idleMoves.length];
+    lastIdle = m;
+    if (m === 'hero') play('jump', 1050, 'hero'); else play(m);
   }
 
   // ---------- inputs ----------
-  wrap.querySelectorAll<HTMLButtonElement>('[data-act]').forEach((b) =>
-    b.addEventListener('click', () => {
-      const a = b.dataset.act as Action;
-      if (a === 'jump') play('jump', 1100);
-      else if (a === 'dance') play(action === 'dance' ? 'idle' : 'dance', action === 'dance' ? 0 : 12000);
-      else if (a === 'run') play(action === 'run' ? 'idle' : 'run', action === 'run' ? 0 : 6000);
-      else play(a, 2800);
-    }));
-  const cycle: Action[] = ['jump', 'dance'];
+  const surprise: Action[] = ['flip', 'hero', 'squat', 'sit', 'spider', 'jump', 'stretch', 'dance'];
   let ci = 0;
-  canvas.addEventListener('click', () => { const a = cycle[ci++ % cycle.length]; play(a, a === 'jump' ? 1100 : a === 'dance' ? 7000 : a === 'run' ? 3500 : 2800); });
+  canvas.addEventListener('click', () => {
+    const a = surprise[ci++ % surprise.length];
+    if (a === 'hero') play('jump', 1050, 'hero'); else play(a);
+  });
   document.getElementById('buddy-x')?.addEventListener('click', () => { wrap.classList.add('gone'); try { sessionStorage.setItem('buddy-hidden', '1'); } catch {} });
   addEventListener('pointermove', (e) => {
     const r = canvas.getBoundingClientRect();
@@ -179,10 +231,12 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
   }, { passive: true });
 
   // scroll → run, section change → jump, contact → dance
-  let lastY = scrollY, lastScroll = 0;
+  let lastY = scrollY, lastScroll = 0, lastRun = 0;
   addEventListener('scroll', () => {
     const dy = Math.abs(scrollY - lastY); lastY = scrollY;
-    if (dy > 6 && (action === 'idle' || action === 'run' || action === 'wave')) { lastScroll = performance.now(); if (action !== 'run') play('run'); }
+    const now = performance.now();
+    if (action === 'run') { lastScroll = now; return; }
+    if (dy > 70 && action === 'idle' && now - lastRun > 9000) { lastScroll = lastRun = now; play('run'); }
   }, { passive: true });
   const secs = Array.from(document.querySelectorAll<HTMLElement>('[data-co]'));
   let lastSec = '';
@@ -204,7 +258,7 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
       if (first) return;
       if (!shown && wasAway) { shown = true; play('wave', 2600); return; }
       if (id === 'contact') play('dance', 9000);
-      else if (action !== 'dance') play('jump', 1100);
+      else if (action !== 'dance') arrive();
     });
   }, { rootMargin: '-42% 0px -42% 0px', threshold: 0 });
   secs.forEach((s) => io.observe(s));
@@ -220,7 +274,9 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
   document.addEventListener('visibilitychange', () => { visible = !document.hidden; last = performance.now(); if (visible) requestAnimationFrame(frame); });
 
   function apply(p: Pose, t: number) {
-    root.position.y = p.rootY; root.rotation.y = p.rootRy; root.rotation.z = p.rootRz;
+    const rx = p.rootRx;
+    root.rotation.set(rx, p.rootRy, p.rootRz, 'YXZ');
+    root.position.set(0, p.rootY + (rx ? 1 - Math.cos(rx) : 0), rx ? -Math.sin(rx) : 0);
     ring.visible = disc.visible = !sw;
     ring.rotation.z = t * 0.5; ring.scale.setScalar(1 + Math.sin(t * 2) * 0.03);
     (disc.material as T.MeshBasicMaterial).opacity = 0.18 + Math.sin(t * 2) * 0.03;
@@ -228,7 +284,7 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
     const hd = pointer.x * 0.5, hu = pointer.y * 0.25;
     for (const k in Cum) delete Cum[k];
     carry('Hips');
-    bone.Hips.position.set(hipsRestPos.x, hipsRestPos.y + p.bodyY / hipsUnit, hipsRestPos.z);
+    bone.Hips.position.copy(hipsTmp.set(hipsWorld0.x, hipsWorld0.y + p.bodyY, hipsWorld0.z).applyMatrix4(hipsInv));
     setBone('Spine', Rx(p.torsoX * 0.4).multiply(Ry(p.torsoY * 0.4)).multiply(Rz(p.torsoZ * 0.4)));
     setBone('Spine1', Rx(p.torsoX * 0.3).multiply(Ry(p.torsoY * 0.3)).multiply(Rz(p.torsoZ * 0.3)));
     setBone('Spine2', Rx(p.torsoX * 0.3).multiply(Ry(p.torsoY * 0.3)).multiply(Rz(p.torsoZ * 0.3)));
@@ -265,11 +321,13 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
         c: Math.random() < 0.22 ? [255, 160, 178] : [236, 228, 234] });
     }
   }
+  const rings: { x: number; y: number; age: number }[] = [];
+  function shock(x: number, y: number) { if (!reduce) rings.push({ x, y, age: 0 }); }
   type Rope = { ax: number; ay: number; len: number; alpha: number };
   let rope: Rope | null = null, fxDirty = false;
   function drawFx(dt: number) {
     if (!fctx) return;
-    if (!puffs.length && !rope) { if (fxDirty) { fctx.clearRect(0, 0, innerWidth, innerHeight); fxDirty = false; } return; }
+    if (!puffs.length && !rope && !rings.length) { if (fxDirty) { fctx.clearRect(0, 0, innerWidth, innerHeight); fxDirty = false; } return; }
     fxDirty = true; fctx.clearRect(0, 0, innerWidth, innerHeight);
     for (let i = puffs.length - 1; i >= 0; i--) {
       const q = puffs[i]; q.age += dt;
@@ -279,13 +337,19 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
       g.addColorStop(0, `rgba(${q.c[0]},${q.c[1]},${q.c[2]},${al})`); g.addColorStop(0.6, `rgba(${q.c[0]},${q.c[1]},${q.c[2]},${al * 0.55})`); g.addColorStop(1, `rgba(${q.c[0]},${q.c[1]},${q.c[2]},0)`);
       fctx.fillStyle = g; fctx.beginPath(); fctx.arc(q.x, q.y, q.r, 0, Math.PI * 2); fctx.fill();
     }
+    for (let i = rings.length - 1; i >= 0; i--) {
+      const g = rings[i]; g.age += dt; const u = g.age / 0.55;
+      if (u >= 1) { rings.splice(i, 1); continue; }
+      fctx.save(); fctx.globalAlpha = (1 - u) * 0.7; fctx.strokeStyle = '#ff7a8f'; fctx.lineWidth = 3 * (1 - u) + 1;
+      fctx.beginPath(); fctx.ellipse(g.x, g.y + 4, 30 + u * 170, 8 + u * 38, 0, 0, Math.PI * 2); fctx.stroke(); fctx.restore();
+    }
     if (rope) {
       const r = canvas.getBoundingClientRect(), hx = r.left + r.width / 2, hy = r.top + r.height * 0.13;
       const ex = rope.ax + (hx - rope.ax) * rope.len, ey = rope.ay + (hy - rope.ay) * rope.len;
       fctx.save(); fctx.globalAlpha = rope.alpha; fctx.lineCap = 'round';
       const sag = (1 - rope.len) * 40;
-      fctx.strokeStyle = '#e6d3ae'; fctx.lineWidth = 4; fctx.beginPath(); fctx.moveTo(rope.ax, rope.ay); fctx.quadraticCurveTo((rope.ax + ex) / 2 + sag, (rope.ay + ey) / 2, ex, ey); fctx.stroke();
-      fctx.strokeStyle = '#8a6a3a'; fctx.lineWidth = 4; fctx.setLineDash([2, 6]); fctx.stroke(); fctx.setLineDash([]);
+      fctx.shadowColor = '#fff'; fctx.shadowBlur = 8; fctx.strokeStyle = '#f2f2f8'; fctx.lineWidth = 2.5; fctx.beginPath(); fctx.moveTo(rope.ax, rope.ay); fctx.quadraticCurveTo((rope.ax + ex) / 2 + sag, (rope.ay + ey) / 2, ex, ey); fctx.stroke();
+      fctx.shadowBlur = 0; fctx.strokeStyle = 'rgba(160,170,190,.9)'; fctx.lineWidth = 1; fctx.setLineDash([3, 5]); fctx.stroke(); fctx.setLineDash([]);
       if (rope.ay > -10) { fctx.shadowColor = '#ee4b62'; fctx.shadowBlur = 18; fctx.fillStyle = '#ee4b62'; fctx.beginPath(); fctx.arc(rope.ax, rope.ay, 7, 0, Math.PI * 2); fctx.fill(); }
       fctx.restore();
     }
@@ -314,8 +378,8 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
     else if (el < A + B + C) { const u = (el - A - B) / C; swTheta = sw.th0 * (1 - u); xo = sw.dir * sw.dx; yo = -sw.E * (1 - u * u); alpha = 1 - u; }
     else {
       wrap.dataset.side = sw.newSide; side = sw.newSide; wrap.style.translate = ''; rope = null;
-      const f = feet(); puff(f.x, f.y, 1.5, 24); sw = null; swTheta = 0;
-      play(pendingId === 'contact' ? 'dance' : 'land', pendingId === 'contact' ? 9000 : 380); pendingId = '';
+      const f = feet(); puff(f.x, f.y, 1.5, 24); shock(f.x, f.y); sw = null; swTheta = 0;
+      play(pendingId === 'contact' ? 'dance' : 'hero'); pendingId = '';
       return;
     }
     wrap.style.translate = `${xo.toFixed(1)}px ${yo.toFixed(1)}px`;
@@ -328,10 +392,11 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt; actionT += dt;
     swingStep(now);
     if (action === 'run' && !until && now - lastScroll > 700) play('idle');
-    if (until && now > until) { until = 0; play('idle'); }
+    if (until && now > until) { until = 0; const n = nextA; if (n) play(n); else play('idle'); }
+    idleDirector(now);
     const tg = target(action, actionT);
-    const k = action === 'jump' || action === 'land' ? 1 - Math.exp(-dt * 40) : 1 - Math.exp(-dt * 14);
-    (J as readonly (keyof Pose)[]).forEach((j) => { cur[j] += (tg[j] - cur[j]) * (j === 'rootRy' && action === 'jump' ? 1 : k); });
+    const k = action === 'jump' || action === 'land' || action === 'hero' || action === 'flip' ? 1 - Math.exp(-dt * 40) : 1 - Math.exp(-dt * 12);
+    (J as readonly (keyof Pose)[]).forEach((j) => { cur[j] += (tg[j] - cur[j]) * ((j === 'rootRy' && action === 'jump') || (j === 'rootRx' && action === 'flip') || (j === 'rootY' && action === 'flip') ? 1 : k); });
     // blink
     const wantSamba = action === 'dance';
     if (wantSamba && !sambaOn) { sambaOn = true; samba.reset().fadeIn(0.35).play(); }
