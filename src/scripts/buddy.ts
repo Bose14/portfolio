@@ -13,7 +13,7 @@ async function boot(wrap: HTMLElement, canvas: HTMLCanvasElement) {
   else document.addEventListener('intro:start', () => setTimeout(start, 600), { once: true });
 }
 
-type Action = 'idle' | 'run' | 'jump' | 'dance' | 'wave' | 'swing' | 'land' | 'flip' | 'hero' | 'squat' | 'sit' | 'spider' | 'stretch' | 'look';
+type Action = 'idle' | 'run' | 'jump' | 'dance' | 'wave' | 'swing' | 'land' | 'flip' | 'hero' | 'squat' | 'sit' | 'spider' | 'stretch' | 'look' | 'nod';
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
 async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
@@ -109,6 +109,8 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
     p.shLz = 0.1; p.shRz = -0.1; p.elL = -0.14; p.elR = -0.14; p.fiL = 0.3; p.fiR = 0.3;
     if (a === 'idle') {
       p.torsoY = s(t * 0.7) * 0.06; p.shLx = s(t * 1.1) * 0.05; p.shRx = -s(t * 1.1) * 0.05;
+      p.bodyY = -0.012 + s(t * 1.6) * 0.008; p.torsoZ = s(t * 0.5) * 0.035; p.thL = 0.03 + s(t * 0.5) * 0.04; p.thR = 0.03 - s(t * 0.5) * 0.04;
+      p.knL = 0.06 + Math.max(0, s(t * 0.5)) * 0.12; p.knR = 0.06 + Math.max(0, -s(t * 0.5)) * 0.12; p.headY = s(t * 0.43) * 0.12; p.headZ = s(t * 0.31) * 0.04;
     } else if (a === 'run') {
       const w = t * 12, S = s(w), C = c(w);
       p.rootRy = 1.0 * runDir; p.torsoX = 0.22; p.torsoY = S * 0.28; p.rootY = Math.abs(C) * 0.1;
@@ -116,17 +118,14 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
       p.knL = 0.25 + 0.95 * Math.max(0, C); p.knR = 0.25 + 0.95 * Math.max(0, -C);
       p.shLx = S * 1.1; p.shRx = -S * 1.1; p.elL = -1.25; p.elR = -1.25; p.fiL = 1.1; p.fiR = 1.1; p.shLz = 0.1; p.shRz = -0.1;
       p.headX = -0.15;
-    } else if (a === 'jump') {
-      const P = clamp(t / 1.05, 0, 1);
-      const u = clamp((P - 0.2) / 0.64, 0, 1);
-      const air = P > 0.2 && P < 0.84 ? s(Math.PI * u) : 0;
+    } else if (a === 'jump') { // a natural hop: wind-up with arms back, drive up with an arm swing, soft landing
+      const P = clamp(t / 1.05, 0, 1), inAir = P > 0.2 && P < 0.84, u = clamp((P - 0.2) / 0.64, 0, 1);
+      const air = inAir ? s(Math.PI * u) : 0;
       const cr = P < 0.2 ? P / 0.2 : P > 0.84 ? 1 - (P - 0.84) / 0.16 : 0;
-      p.bodyY = -0.34 * cr; p.thL = -1.0 * cr - 0.9 * air; p.thR = -1.0 * cr - 0.35 * air; p.knL = 1.7 * cr + 1.2 * air; p.knR = 1.7 * cr + 0.9 * air;
-      p.torsoX = 0.35 * cr; p.shLx = 0.6 * cr; p.shRx = 0.6 * cr;
-      p.shLz = 0.14 + 2.7 * air; p.shRz = -0.14 - 2.7 * air; p.elL = -0.4 * air; p.elR = -0.4 * air;
-      p.rootY = 0.5 * 4 * u * (1 - u) * (P > 0.2 && P < 0.84 ? 1 : 0);
-      p.rootRy = P > 0.2 && P < 0.84 ? u * Math.PI * 2 : 0;
-      p.headX = -0.2 * air;
+      p.bodyY = -0.3 * cr; p.thL = -0.95 * cr - 0.85 * air; p.thR = -0.95 * cr - 0.25 * air; p.knL = 1.6 * cr + 1.3 * air; p.knR = 1.6 * cr + 0.55 * air;
+      p.torsoX = 0.38 * cr - 0.06 * air; p.shLx = 0.9 * cr - 1.5 * air; p.shRx = 0.9 * cr - 1.3 * air; p.shLz = 0.2 + 0.5 * air; p.shRz = -0.2 - 0.5 * air;
+      p.elL = -0.3 * cr - 0.7 * air; p.elR = -0.3 * cr - 0.7 * air;
+      p.rootY = inAir ? 0.42 * 4 * u * (1 - u) : 0; p.headX = -0.1 * air + 0.12 * cr; p.rootRy = 0.25 * air;
     } else if (a === 'swing') {
       p.shLz = 3.0; p.shRz = -3.0; p.shLx = -0.15; p.shRx = -0.15; p.elL = -0.25; p.elR = -0.25; p.fiL = 1.2; p.fiR = 1.2;
       p.thL = -0.55 + Math.sin(t * 5) * 0.12; p.thR = -0.1 - Math.sin(t * 5) * 0.12; p.knL = 1.0; p.knR = 0.75;
@@ -166,6 +165,10 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
       const k = clamp(t / 0.4, 0, 1);
       p.shLz = 0.35 * k; p.shRz = -0.35 * k; p.elL = p.elR = -0.5 * k; p.torsoY = s(t * 1.5) * 0.3 * k; p.headY = s(t * 1.5) * 0.7 * k; p.headX = 0.05;
       p.rootRy = s(t * 1.5) * 0.35 * k;
+    } else if (a === 'nod') { // friendly hello: quick wave and a nod
+      const k = clamp(t / 0.25, 0, 1);
+      p.shRz = -(1.6 + 0.9 * k); p.shRx = -0.2; p.elR = -0.5 + s(t * 11) * 0.45 * k; p.fiR = 0; p.headX = s(t * 5) * 0.12 * k + 0.05; p.torsoX = 0.06 * k;
+      p.torsoZ = 0.05 * k; p.headZ = 0.1 * k; p.rootRy = 0.2 * k; p.bodyY = -0.02 * k;
     } else if (a === 'dance') {
       const b = t * Math.PI * 2 * 2.2, S = s(b), HB = s(b / 2);
       const move = Math.floor(t / 1.82) % 3;
@@ -186,7 +189,7 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
     return p;
   }
 
-  const HOLD: Partial<Record<Action, number>> = { jump: 1050, flip: 1100, hero: 1500, squat: 2600, sit: 4200, spider: 3000, stretch: 2400, look: 3200, dance: 9000 };
+  const HOLD: Partial<Record<Action, number>> = { jump: 1050, flip: 1100, hero: 1500, squat: 2600, sit: 4200, spider: 3000, stretch: 2400, look: 3200, nod: 1700, dance: 9000 };
   let nextA: Action | '' = '', idleAt = performance.now() + 2800;
   function play(a: Action, dur = 0, then: Action | '' = '') {
     action = a; actionT = 0; nextA = then;
@@ -199,25 +202,23 @@ async function load(wrap: HTMLElement, canvas: HTMLCanvasElement) {
     if (a === 'hero') { const f = feet(); puff(f.x, f.y, 1.4, 22); shock(f.x, f.y); }
     wrap.dataset.action = a;
   }
-  // a shuffled bag of "arrival" moves so each section feels different
-  let bag: string[] = [];
-  function arrive() {
-    if (!bag.length) bag = ['hero', 'flip', 'jump', 'hero', 'flip'].sort(() => Math.random() - 0.5);
-    const m = bag.pop()!;
-    if (m === 'hero') play('jump', 1050, 'hero'); else play(m as Action);
+  // arrival / idle moves: weighted, never the same move twice in a row or within the last few
+  const hist: string[] = [];
+  function pick(table: [string, number][]): string {
+    const ok = table.filter(([m]) => !hist.includes(m));
+    const pool = ok.length ? ok : table; let r = Math.random() * pool.reduce((n, [, w]) => n + w, 0);
+    let m = pool[0][0]; for (const [name, w] of pool) { r -= w; if (r <= 0) { m = name; break; } }
+    hist.push(m); if (hist.length > 3) hist.shift(); return m;
   }
-  const idleMoves: Action[] = ['squat', 'sit', 'spider', 'stretch', 'look', 'flip', 'hero'];
-  let lastIdle = '';
+  function go(m: string) { if (m === 'hero') play('jump', 1050, 'hero'); else play(m as Action); }
+  function arrive() { go(pick([['look', 3], ['nod', 3], ['stretch', 2], ['squat', 2], ['spider', 2], ['jump', 1], ['flip', 0.6], ['hero', 1]])); }
   function idleDirector(now: number) {
     if (action !== 'idle' || sw || now < idleAt || wrap.classList.contains('away')) return;
-    let m = idleMoves[Math.floor(Math.random() * idleMoves.length)];
-    if (m === lastIdle) m = idleMoves[(idleMoves.indexOf(m) + 1) % idleMoves.length];
-    lastIdle = m;
-    if (m === 'hero') play('jump', 1050, 'hero'); else play(m);
+    go(pick([['look', 3], ['nod', 1.5], ['stretch', 2], ['squat', 2], ['sit', 2.5], ['spider', 2], ['flip', 0.4], ['hero', 0.5]]));
   }
 
   // ---------- inputs ----------
-  const surprise: Action[] = ['flip', 'hero', 'squat', 'sit', 'spider', 'jump', 'stretch', 'dance'];
+  const surprise: Action[] = ['nod', 'hero', 'squat', 'sit', 'spider', 'look', 'flip', 'stretch', 'jump', 'dance'];
   let ci = 0;
   canvas.addEventListener('click', () => {
     const a = surprise[ci++ % surprise.length];

@@ -265,8 +265,8 @@ body.cinema-open .chip { opacity: 1; transition-delay: 2s; }
 @media (min-width: 1100px) { .buddy { --bw: 380px; } }
 @media (min-width: 1500px) { .buddy { --bw: 430px; } }
 @media (max-width: 768px) {
-  .buddy, .buddy[data-side='r'] { left: 0; bottom: 2px; width: 120px; }
-  #buddy-cv { width: 120px; height: 140px; }
+  .buddy, .buddy[data-side='r'] { left: -18px; bottom: 2px; width: 230px; }
+  #buddy-cv { width: 230px; height: 268px; }
   .buddy-ui { display: none; }
 }
 @media print { .buddy { display: none; } }
